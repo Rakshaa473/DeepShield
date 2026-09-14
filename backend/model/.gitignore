@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+backend/venv/
+
+# Environment / secrets
+.env
+.env.*
+
+# Python uploads and generated files
+backend/uploads/
+uploads/
+
+# Next.js
+.next/
+frontend/.next/
+node_modules/
+
+# Build files
+dist/
+build/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

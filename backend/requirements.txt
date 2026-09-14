@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-multipart
+transformers
+torch
+pillow
+pytesseract
+pypdf
+python-docx
+librosa
+soundfile
+numpy
+opencv-python

@@ -1,65 +1,29 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, AudioLines, FileCheck2, FileText, Image as ImageIcon, ScanLine, ShieldCheck, Video } from "lucide-react";
+
+const media = [
+  ["Image", "Pixels, metadata, and visual artifacts", "/upload/image", ImageIcon, "JPG · PNG · WEBP"],
+  ["Document", "Text signals and provenance clues", "/upload/document", FileCheck2, "PDF · DOCX · TXT"],
+  ["Audio", "Spectral patterns in voice and sound", "/upload/audio", AudioLines, "WAV · MP3 · FLAC"],
+  ["Video", "Sampled frames and motion signals", "/upload/video", Video, "MP4 · MOV · WEBM"],
+  ["Text", "Language patterns and phrasing clues", "/upload/text", FileText, "Paste any text"],
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="landing-page">
+      <nav className="landing-nav">
+        <Link href="/" className="sidebar-brand"><span className="brand-mark"><ShieldCheck size={19} /></span><span><strong>DeepShield</strong><small>AUTHENTICITY LAB</small></span></Link>
+        <div className="landing-nav-links"><Link href="/login">Sign in</Link><Link href="/signup" className="landing-nav-cta">Enter the lab <ArrowRight size={15} /></Link></div>
+      </nav>
+      <section className="landing-hero">
+        <div className="landing-copy reveal"><p className="page-kicker">AI-powered digital authenticity</p><h1>Truth leaves<br /><em>a signal.</em></h1><p>DeepShield is a practical media forensics workspace for the files, voices, images, and words shaping our digital world.</p><div className="landing-actions"><Link href="/signup" className="landing-primary">Start an analysis <ArrowRight size={17} /></Link><Link href="/login" className="landing-secondary">Sign in to workspace</Link></div></div>
+        <div className="landing-signal reveal reveal-delay" aria-hidden="true"><div className="signal-core"><ScanLine size={43} /><span>AUTHENTICITY<br /><b>SIGNAL</b></span></div><div className="signal-orbit signal-orbit-a" /><div className="signal-orbit signal-orbit-b" /><div className="signal-caption"><span>01</span><p>Observe<br />without assumption.</p></div></div>
+      </section>
+      <section className="landing-section landing-how"><div className="landing-section-heading"><p className="page-kicker">A clear path to context</p><h2>How DeepShield works</h2></div><div className="how-grid">{[["01", "Upload", "Bring the content you want to understand."], ["02", "Analyze", "Let the right forensic instrument inspect it."], ["03", "Verify", "Review the signals behind the result."], ["04", "Understand", "Make a more informed decision." ]].map(([number, title, text]) => <div className="how-step" key={number}><span>{number}</span><h3>{title}</h3><p>{text}</p></div>)}</div></section>
+      <section className="landing-section"><div className="landing-section-heading"><p className="page-kicker">One workspace, five instruments</p><h2>Inspect every kind of signal.</h2></div><div className="media-grid">{media.map(([title, text, href, Icon, formats]) => <Link href={href} className="landing-media-card" key={title}><span className="landing-media-icon"><Icon size={21} /></span><h3>{title}</h3><p>{text}</p><small>{formats}</small><ArrowRight size={16} /></Link>)}</div></section>
+      <section className="landing-section landing-why"><div className="why-copy"><p className="page-kicker">Why DeepShield</p><h2>Evidence that stays understandable.</h2><p>Digital authenticity is complicated enough. DeepShield keeps the workflow calm, the language clear, and the supporting signals close at hand.</p></div><div className="why-list">{[["Multi-media by design", "One consistent workflow for images, documents, audio, video, and text."], ["Results with context", "Probability and risk sit beside the evidence that produced them."], ["Privacy-conscious prototype", "Your history stays in this browser while this project is in prototype mode."]].map(([title, text]) => <div key={title}><ShieldCheck size={18} /><span><strong>{title}</strong><p>{text}</p></span></div>)}</div></section>
+      <footer className="landing-footer"><span>DEEPSHIELD / 2026</span><span>Images · Documents · Audio · Video · Text</span></footer>
+    </main>
   );
 }
