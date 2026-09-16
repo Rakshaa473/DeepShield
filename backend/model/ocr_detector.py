@@ -9,7 +9,6 @@ def extract_text(image_path):
         return text.strip()
 
     except pytesseract.TesseractNotFoundError:
-        # Tesseract is not installed on some deployment environments
         return ""
 
     except Exception:
