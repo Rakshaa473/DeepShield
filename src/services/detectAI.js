@@ -1,10 +1,10 @@
-const API_BASE_URL = "https://deepshield-zfj8.onrender.com";
+const API_URL = "https://deepshield-zfj8.onrender.com";
 
 export async function detectImage(image) {
   const formData = new FormData();
   formData.append("file", image);
 
-  const response = await fetch(`${API_BASE_URL}/detect-image`, {
+  const response = await fetch(`${API_URL}/detect-image`, {
     method: "POST",
     body: formData,
   });
@@ -22,7 +22,7 @@ export async function detectDocument(document) {
   const formData = new FormData();
   formData.append("file", document);
 
-  const response = await fetch(`${API_BASE_URL}/detect-document`, {
+  const response = await fetch(`${API_URL}/detect-document`, {
     method: "POST",
     body: formData,
   });
@@ -40,7 +40,7 @@ export async function detectAudio(audio) {
   const formData = new FormData();
   formData.append("file", audio);
 
-  const response = await fetch(`${API_BASE_URL}/detect-audio`, {
+  const response = await fetch(`${API_URL}/detect-audio`, {
     method: "POST",
     body: formData,
   });
@@ -58,7 +58,7 @@ export async function detectVideo(video) {
   const formData = new FormData();
   formData.append("file", video);
 
-  const response = await fetch(`${API_BASE_URL}/detect-video`, {
+  const response = await fetch(`${API_URL}/detect-video`, {
     method: "POST",
     body: formData,
   });
@@ -73,7 +73,7 @@ export async function detectVideo(video) {
 }
 
 export async function detectText(text) {
-  const response = await fetch(`${API_BASE_URL}/detect-text`, {
+  const response = await fetch(`${API_URL}/detect-text`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
