@@ -1,15 +1,16 @@
-import os
-
-import cv2
 import pytesseract
+from PIL import Image
 
-configured_tesseract = os.getenv("TESSERACT_CMD")
-if configured_tesseract:
-    pytesseract.pytesseract.tesseract_cmd = configured_tesseract
 
 def extract_text(image_path):
-    image = cv2.imread(image_path)
+    try:
+        image = Image.open(image_path)
+        text = pytesseract.image_to_string(image)
+        return text.strip()
 
-    text = pytesseract.image_to_string(image)
+    except pytesseract.TesseractNotFoundError:
+        # Tesseract is not installed on some deployment environments
+        return ""
 
-    return text.strip()
+    except Exception:
+        return ""
