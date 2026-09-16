@@ -2,7 +2,7 @@ fastapi
 uvicorn[standard]
 python-multipart
 transformers
-torch
+torch==2.8.0+cpu
 pillow
 pytesseract
 pypdf
@@ -11,3 +11,4 @@ librosa
 soundfile
 numpy
 opencv-python
+--extra-index-url https://download.pytorch.org/whl/cpu
