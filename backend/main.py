@@ -16,20 +16,48 @@ from model.video_detector import analyze_video, SUPPORTED_VIDEO_EXTENSIONS
 from model.text_detector import analyze_text
 
 
-app = FastAPI()
+# ============================================================
+# FASTAPI APP
+# ============================================================
+
+app = FastAPI(
+    title="DeepShield AI Backend",
+    description="AI-powered multimedia authenticity and deepfake detection API",
+    version="1.0.0",
+)
 
 
 # ============================================================
-# CORS - Allow Next.js frontend
+# CORS
 # ============================================================
+#
+# Allows:
+# - Local Next.js development
+# - Production Vercel frontend
+# - Optional FRONTEND_URL environment variable
+#
+# ============================================================
+
+allowed_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://deepshield-app.vercel.app",
+]
+
+# Optional additional frontend URLs from Render environment variable
+frontend_url = os.getenv("FRONTEND_URL", "")
+
+if frontend_url:
+    for origin in frontend_url.split(","):
+        origin = origin.strip()
+
+        if origin and origin not in allowed_origins:
+            allowed_origins.append(origin)
+
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        *[origin.strip() for origin in os.getenv("FRONTEND_URL", "").split(",") if origin.strip()],
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,17 +65,33 @@ app.add_middleware(
 
 
 # ============================================================
-# Upload folder
+# UPLOAD FOLDER
 # ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent
-UPLOAD_FOLDER = BASE_DIR / "uploads"
-UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 
+UPLOAD_FOLDER = BASE_DIR / "uploads"
+
+UPLOAD_FOLDER.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+
+# ============================================================
+# FILE HELPERS
+# ============================================================
 
 def save_upload(file: UploadFile):
-    """Save an upload under a generated name and return its path."""
-    extension = Path(file.filename or "").suffix.lower()
+    """
+    Save an uploaded file using a generated temporary filename.
+    Returns the Path of the saved file.
+    """
+
+    extension = Path(
+        file.filename or ""
+    ).suffix.lower()
+
     temporary_file = tempfile.NamedTemporaryFile(
         dir=UPLOAD_FOLDER,
         prefix="deepshield-",
@@ -56,17 +100,42 @@ def save_upload(file: UploadFile):
     )
 
     try:
+
         with temporary_file:
-            shutil.copyfileobj(file.file, temporary_file)
+            shutil.copyfileobj(
+                file.file,
+                temporary_file,
+            )
+
     except Exception:
-        Path(temporary_file.name).unlink(missing_ok=True)
+
+        Path(
+            temporary_file.name
+        ).unlink(
+            missing_ok=True
+        )
+
         raise
 
-    return Path(temporary_file.name)
+    return Path(
+        temporary_file.name
+    )
 
 
 def remove_upload(filepath):
-    Path(filepath).unlink(missing_ok=True)
+    """
+    Delete uploaded file after processing.
+    """
+
+    try:
+
+        Path(filepath).unlink(
+            missing_ok=True
+        )
+
+    except Exception:
+
+        pass
 
 
 # ============================================================
@@ -75,6 +144,7 @@ def remove_upload(filepath):
 
 @app.get("/")
 def home():
+
     return {
         "message": "DeepShield AI Backend Running 🚀"
     }
@@ -85,20 +155,50 @@ def home():
 # ============================================================
 
 @app.post("/detect-image")
-async def detect_image_endpoint(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
+async def detect_image_endpoint(
+    file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = None,
+):
 
+    # --------------------------------------------------------
     # Save uploaded image
+    # --------------------------------------------------------
+
     filename = file.filename or "image"
+
     filepath = save_upload(file)
-    background_tasks.add_task(remove_upload, filepath)
+
+    if background_tasks:
+        background_tasks.add_task(
+            remove_upload,
+            filepath,
+        )
+
 
     # --------------------------------------------------------
-    # Image AI model
+    # IMAGE AI MODEL
     # --------------------------------------------------------
 
-    predictions = detect_image(str(filepath))
+    try:
+
+        predictions = detect_image(
+            str(filepath)
+        )
+
+    except Exception as error:
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Image detection failed: {error}",
+        ) from error
+
+
+    # --------------------------------------------------------
+    # Handle empty prediction
+    # --------------------------------------------------------
 
     if not predictions:
+
         return {
             "filename": filename,
             "label": "Unknown",
@@ -106,70 +206,152 @@ async def detect_image_endpoint(file: UploadFile = File(...), background_tasks: 
             "score": 0,
             "text": "",
             "metadata": {},
-            "metadata_ai_probability": 0
+            "metadata_ai_probability": 0,
+            "image_model_score": 0,
+            "image_model_label": "Unknown",
+            "ela_score": 0,
         }
+
+
+    # --------------------------------------------------------
+    # Top AI model prediction
+    # --------------------------------------------------------
 
     top = predictions[0]
 
-    image_score = float(top.get("score", 0)) * 100
-    model_label = str(top.get("label", "Unknown"))
+    image_score = float(
+        top.get(
+            "score",
+            0,
+        )
+    ) * 100
+
+    model_label = str(
+        top.get(
+            "label",
+            "Unknown",
+        )
+    )
 
 
     # --------------------------------------------------------
-    # Metadata analysis
+    # METADATA ANALYSIS
     # --------------------------------------------------------
 
-    metadata_result = analyze_metadata(str(filepath))
+    try:
+
+        metadata_result = analyze_metadata(
+            str(filepath)
+        )
+
+    except Exception:
+
+        metadata_result = {
+            "metadata": {},
+            "ai_probability": 0,
+        }
+
 
     metadata_score = float(
-        metadata_result.get("ai_probability", 0)
+        metadata_result.get(
+            "ai_probability",
+            0,
+        )
     )
 
 
     # --------------------------------------------------------
     # OCR
     # --------------------------------------------------------
+    #
+    # IMPORTANT:
+    # Render does not have the Tesseract executable installed.
+    # Therefore OCR must not be allowed to crash the complete
+    # image detection request.
+    #
+    # If Tesseract is unavailable, we simply continue with
+    # extracted_text = "".
+    #
+    # --------------------------------------------------------
 
-    extracted_text = extract_text(str(filepath))
+    extracted_text = ""
+
+    try:
+
+        extracted_text = extract_text(
+            str(filepath)
+        )
+
+        if extracted_text is None:
+            extracted_text = ""
+
+    except Exception:
+
+        extracted_text = ""
 
 
     # --------------------------------------------------------
     # ELA
+    # --------------------------------------------------------
     #
-    # If your current project does not have a separate ELA
-    # detector, we use 0 as the default.
+    # Current project uses 0 as the default ELA score.
+    #
     # --------------------------------------------------------
 
     ela_score = 0
 
 
     # --------------------------------------------------------
-    # Combined scoring
+    # COMBINED SCORING
     # --------------------------------------------------------
 
-    final_score, final_label, risk = calculate_score(
-        image_score,
-        metadata_score,
-        ela_score,
-        extracted_text
-    )
+    try:
+
+        final_score, final_label, risk = calculate_score(
+            image_score,
+            metadata_score,
+            ela_score,
+            extracted_text,
+        )
+
+    except Exception as error:
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Score calculation failed: {error}",
+        ) from error
 
 
     # --------------------------------------------------------
-    # Return result
+    # RETURN RESULT
     # --------------------------------------------------------
 
     return {
         "filename": filename,
+
         "score": final_score,
+
         "label": final_label,
+
         "risk": risk,
+
         "text": extracted_text,
-        "metadata": metadata_result.get("metadata", {}),
+
+        "metadata": metadata_result.get(
+            "metadata",
+            {},
+        ),
+
         "metadata_ai_probability": metadata_score,
-        "image_model_score": round(image_score, 2),
+
+        "image_model_score": round(
+            image_score,
+            2,
+        ),
+
         "image_model_label": model_label,
-        "ela_score": ela_score
+
+        "ela_score": ela_score,
     }
 
 
@@ -178,37 +360,68 @@ async def detect_image_endpoint(file: UploadFile = File(...), background_tasks: 
 # ============================================================
 
 @app.post("/detect-document")
-async def detect_document(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
+async def detect_document(
+    file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = None,
+):
 
-    # Save uploaded document
+    # --------------------------------------------------------
+    # Save document
+    # --------------------------------------------------------
+
     filename = file.filename or "document"
+
     filepath = save_upload(file)
-    background_tasks.add_task(remove_upload, filepath)
+
+    if background_tasks:
+        background_tasks.add_task(
+            remove_upload,
+            filepath,
+        )
 
 
     # --------------------------------------------------------
     # Analyze document
     # --------------------------------------------------------
 
-    result = analyze_document(str(filepath))
+    try:
+
+        result = analyze_document(
+            str(filepath)
+        )
+
+    except Exception as error:
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Document analysis failed: {error}",
+        ) from error
+
+
+    # --------------------------------------------------------
+    # AI probability
+    # --------------------------------------------------------
 
     ai_probability = result.get(
         "ai_probability",
-        0
+        0,
     )
 
 
     # --------------------------------------------------------
-    # Determine risk
+    # Risk
     # --------------------------------------------------------
 
     if ai_probability >= 70:
+
         risk = "High"
 
     elif ai_probability >= 40:
+
         risk = "Medium"
 
     else:
+
         risk = "Low"
 
 
@@ -217,17 +430,34 @@ async def detect_document(file: UploadFile = File(...), background_tasks: Backgr
     # --------------------------------------------------------
 
     return {
+
         "filename": filename,
+
         "label": "Document Analysis",
+
         "risk": risk,
+
         "ai_probability": ai_probability,
-        "word_count": result.get("word_count", 0),
-        "character_count": result.get("character_count", 0),
+
+        "word_count": result.get(
+            "word_count",
+            0,
+        ),
+
+        "character_count": result.get(
+            "character_count",
+            0,
+        ),
+
         "suspicious_keywords": result.get(
             "suspicious_keywords",
-            []
+            [],
         ),
-        "text": result.get("text", "")
+
+        "text": result.get(
+            "text",
+            "",
+        ),
     }
 
 
@@ -236,28 +466,73 @@ async def detect_document(file: UploadFile = File(...), background_tasks: Backgr
 # ============================================================
 
 @app.post("/detect-audio")
-async def detect_audio_endpoint(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
+async def detect_audio_endpoint(
+    file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = None,
+):
 
     filename = file.filename or "audio"
-    extension = os.path.splitext(filename)[1].lower()
+
+    extension = os.path.splitext(
+        filename
+    )[1].lower()
+
+
+    # --------------------------------------------------------
+    # Check format
+    # --------------------------------------------------------
 
     if extension not in SUPPORTED_AUDIO_EXTENSIONS:
-        supported_formats = ", ".join(sorted(SUPPORTED_AUDIO_EXTENSIONS))
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported audio format. Supported formats: {supported_formats}",
+
+        supported_formats = ", ".join(
+            sorted(
+                SUPPORTED_AUDIO_EXTENSIONS
+            )
         )
 
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Unsupported audio format. "
+                f"Supported formats: {supported_formats}"
+            ),
+        )
+
+
+    # --------------------------------------------------------
+    # Save audio
+    # --------------------------------------------------------
+
     filepath = save_upload(file)
-    background_tasks.add_task(remove_upload, filepath)
+
+    if background_tasks:
+        background_tasks.add_task(
+            remove_upload,
+            filepath,
+        )
+
+
+    # --------------------------------------------------------
+    # Analyze audio
+    # --------------------------------------------------------
 
     try:
-        result = analyze_audio(str(filepath))
+
+        result = analyze_audio(
+            str(filepath)
+        )
+
     except Exception as error:
+
         raise HTTPException(
             status_code=400,
             detail=f"Audio analysis failed: {error}",
         ) from error
+
+
+    # --------------------------------------------------------
+    # Return result
+    # --------------------------------------------------------
 
     return {
         "filename": filename,
@@ -270,28 +545,73 @@ async def detect_audio_endpoint(file: UploadFile = File(...), background_tasks: 
 # ============================================================
 
 @app.post("/detect-video")
-async def detect_video_endpoint(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
+async def detect_video_endpoint(
+    file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = None,
+):
 
     filename = file.filename or "video"
-    extension = os.path.splitext(filename)[1].lower()
+
+    extension = os.path.splitext(
+        filename
+    )[1].lower()
+
+
+    # --------------------------------------------------------
+    # Check format
+    # --------------------------------------------------------
 
     if extension not in SUPPORTED_VIDEO_EXTENSIONS:
-        supported_formats = ", ".join(sorted(SUPPORTED_VIDEO_EXTENSIONS))
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported video format. Supported formats: {supported_formats}",
+
+        supported_formats = ", ".join(
+            sorted(
+                SUPPORTED_VIDEO_EXTENSIONS
+            )
         )
 
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Unsupported video format. "
+                f"Supported formats: {supported_formats}"
+            ),
+        )
+
+
+    # --------------------------------------------------------
+    # Save video
+    # --------------------------------------------------------
+
     filepath = save_upload(file)
-    background_tasks.add_task(remove_upload, filepath)
+
+    if background_tasks:
+        background_tasks.add_task(
+            remove_upload,
+            filepath,
+        )
+
+
+    # --------------------------------------------------------
+    # Analyze video
+    # --------------------------------------------------------
 
     try:
-        result = analyze_video(str(filepath))
+
+        result = analyze_video(
+            str(filepath)
+        )
+
     except Exception as error:
+
         raise HTTPException(
             status_code=400,
             detail=f"Video analysis failed: {error}",
         ) from error
+
+
+    # --------------------------------------------------------
+    # Return result
+    # --------------------------------------------------------
 
     return {
         "filename": filename,
@@ -304,16 +624,47 @@ async def detect_video_endpoint(file: UploadFile = File(...), background_tasks: 
 # ============================================================
 
 @app.post("/detect-text")
-async def detect_text_endpoint(payload: dict = Body(...)):
+async def detect_text_endpoint(
+    payload: dict = Body(...),
+):
 
-    text = payload.get("text")
+    # --------------------------------------------------------
+    # Get text
+    # --------------------------------------------------------
 
-    if not isinstance(text, str) or not text.strip():
+    text = payload.get(
+        "text"
+    )
+
+
+    # --------------------------------------------------------
+    # Validate
+    # --------------------------------------------------------
+
+    if not isinstance(
+        text,
+        str,
+    ) or not text.strip():
+
         raise HTTPException(
             status_code=400,
             detail="Text is required for analysis.",
         )
 
-    return analyze_text(text)
 
+    # --------------------------------------------------------
+    # Analyze
+    # --------------------------------------------------------
 
+    try:
+
+        return analyze_text(
+            text
+        )
+
+    except Exception as error:
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Text analysis failed: {error}",
+        ) from error
