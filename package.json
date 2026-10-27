@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "browser": "electron ."
   },
   "dependencies": {
     "firebase": "^12.16.0",
@@ -17,8 +18,10 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "electron": "^45.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
     "tailwindcss": "^4"
-  }
+  },
+  "main": "electron/main.cjs"
 }

@@ -1,47 +1,93 @@
-def calculate_score(image_score, metadata_score, ela_score, text):
 
-    ai = 0
-    real = 0
+def calculate_score(
+    image_score,
+    metadata_score=None,
+    ela_score=None,
+    text=""
+):
+    """
+    Combine available forensic signals into an experimental
+    AI-likelihood score.
 
-    # AI MODEL
-    if image_score >= 80:
-        real += 40
-    elif image_score >= 60:
-        real += 25
-        ai += 15
+    IMPORTANT:
+    This score is not a calibrated probability and cannot
+    prove whether an image is real or AI-generated.
+
+    Input scores must represent AI-likelihood on a 0-100 scale.
+    Metadata and ELA must be calibrated before being used as
+    evidence of AI generation.
+
+    Returns:
+        (score, label, risk)
+    """
+
+    def valid_score(value):
+        if value is None or isinstance(value, bool):
+            return None
+
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return None
+
+        if number != number or number in (
+            float("inf"),
+            float("-inf")
+        ):
+            return None
+
+        if not 0 <= number <= 100:
+            return None
+
+        return number
+
+    image_ai = valid_score(image_score)
+
+    # An invalid or missing primary model score means we cannot
+    # responsibly classify the image.
+    if image_ai is None:
+        return (50.0, "Inconclusive", "Unknown")
+
+    # Do not automatically treat missing metadata/ELA as zero.
+    metadata_ai = valid_score(metadata_score)
+    ela_ai = valid_score(ela_score)
+
+    # The image model is the only primary authenticity signal.
+    # Metadata and ELA are omitted until their scores have been
+    # validated and calibrated for this exact task.
+    #
+    # This prevents unavailable or uncalibrated forensic signals
+    # from silently changing the model's prediction.
+    ai_score = image_ai
+
+    # Scores from 40-60 are deliberately uncertain.
+    if ai_score >= 70:
+        label = "AI Generated"
+        risk = "High"
+        score = ai_score
+
+    elif ai_score >= 60:
+        label = "Likely AI Generated"
+        risk = "Medium"
+        score = ai_score
+
+    elif ai_score <= 30:
+        label = "Likely Real Image"
+        risk = "Low"
+        score = 100 - ai_score
+
+    elif ai_score <= 40:
+        label = "Likely Real Image"
+        risk = "Medium"
+        score = 100 - ai_score
+
     else:
-        ai += 40
+        label = "Inconclusive"
+        risk = "Unknown"
+        score = 50.0
 
-    # METADATA
-    if metadata_score >= 80:
-        ai += 20
-    elif metadata_score >= 50:
-        ai += 10
-    else:
-        real += 20
-
-    # ELA
-    if ela_score >= 70:
-        ai += 25
-    elif ela_score >= 40:
-        ai += 10
-    else:
-        real += 25
-
-    # OCR
-    if len(text.strip()) > 20:
-        real += 15
-
-    # FINAL SCORE
-    total = ai + real
-
-    if total == 0:
-        total = 1
-
-    ai_percent = round((ai / total) * 100, 2)
-    real_percent = round((real / total) * 100, 2)
-
-    if ai_percent > real_percent:
-        return ai_percent, "AI Generated", "High"
-
-    return real_percent, "Real Image", "Low"
+    return (
+        round(score, 2),
+        label,
+        risk
+    )

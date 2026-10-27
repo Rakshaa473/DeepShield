@@ -1,5 +1,5 @@
-import os
 
+import os
 import librosa
 
 
@@ -11,22 +11,47 @@ def _mean(values):
 
 
 def analyze_audio(file_path):
-    """Extract audio features and calculate a lightweight prototype score."""
+    """
+    Extract audio signal features for DeepShield.
+
+    IMPORTANT:
+    This is feature analysis, NOT a trained AI-generated-audio detector.
+    Signal features alone cannot reliably determine audio authenticity.
+    """
+
     extension = os.path.splitext(file_path)[1].lower()
 
     if extension not in SUPPORTED_AUDIO_EXTENSIONS:
-        raise ValueError(f"Unsupported audio format: {extension or 'unknown'}")
+        raise ValueError(
+            f"Unsupported audio format: {extension or 'unknown'}"
+        )
 
-    audio, sample_rate = librosa.load(file_path, sr=None, mono=True)
+    if not os.path.isfile(file_path):
+        raise FileNotFoundError("The uploaded audio file was not found.")
+
+    audio, sample_rate = librosa.load(
+        file_path,
+        sr=None,
+        mono=True
+    )
 
     if audio.size == 0:
         raise ValueError("The uploaded audio file is empty.")
 
+    if sample_rate <= 0:
+        raise ValueError("Invalid audio sample rate.")
+
     rms = librosa.feature.rms(y=audio)[0]
     zero_crossing_rate = librosa.feature.zero_crossing_rate(audio)[0]
-    spectral_centroid = librosa.feature.spectral_centroid(y=audio, sr=sample_rate)[0]
-    spectral_bandwidth = librosa.feature.spectral_bandwidth(y=audio, sr=sample_rate)[0]
-    spectral_rolloff = librosa.feature.spectral_rolloff(y=audio, sr=sample_rate)[0]
+    spectral_centroid = librosa.feature.spectral_centroid(
+        y=audio, sr=sample_rate
+    )[0]
+    spectral_bandwidth = librosa.feature.spectral_bandwidth(
+        y=audio, sr=sample_rate
+    )[0]
+    spectral_rolloff = librosa.feature.spectral_rolloff(
+        y=audio, sr=sample_rate
+    )[0]
     spectral_flatness = librosa.feature.spectral_flatness(y=audio)[0]
 
     features = {
@@ -38,27 +63,22 @@ def analyze_audio(file_path):
         "spectral_flatness": _mean(spectral_flatness),
     }
 
-    # This is an intentionally simple signal-based prototype, not a trained detector.
-    ai_probability = 10
-    if features["spectral_flatness"] > 0.08:
-        ai_probability += 15
-    if features["zero_crossing_rate"] > 0.15:
-        ai_probability += 10
-    if features["spectral_centroid_hz"] > 3500:
-        ai_probability += 10
+    duration = float(librosa.get_duration(
+        y=audio,
+        sr=sample_rate
+    ))
 
-    ai_probability = min(ai_probability, 45)
-
-    if ai_probability >= 35:
-        risk = "Medium"
-    else:
-        risk = "Low"
-
+    # Do not invent an AI probability from unvalidated thresholds.
     return {
-        "label": "Prototype Audio Analysis",
-        "ai_probability": ai_probability,
-        "risk": risk,
-        "duration": round(float(librosa.get_duration(y=audio, sr=sample_rate)), 3),
+        "label": "Inconclusive",
+        "ai_probability": None,
+        "risk": "Unknown",
+        "message": (
+            "Audio features were extracted successfully, but a trained "
+            "and validated AI-audio detection model is required to "
+            "estimate whether this audio is AI-generated."
+        ),
+        "duration": round(duration, 3),
         "sample_rate": int(sample_rate),
         "features": features,
     }

@@ -1,3 +1,4 @@
+
 import re
 
 
@@ -18,44 +19,69 @@ SUSPICIOUS_PATTERNS = {
 
 
 def analyze_text(text):
-    """Return a lightweight heuristic result, not proof of AI authorship."""
+    """
+    Analyze text for selected phrases and repetition.
+
+    This is a rule-based prototype, not a trained AI-text detector.
+    The indicators do not prove AI authorship.
+    """
+
+    if not isinstance(text, str):
+        raise ValueError("Input text must be a string.")
+
     normalized_text = text.strip()
     lower_text = normalized_text.lower()
-    words = re.findall(r"\b\w+[\w'-]*\b", normalized_text)
+
+    words = re.findall(r"\b[\w]+(?:['’-][\w]+)*\b", normalized_text)
+
     indicators = []
 
+    # Find selected phrases.
     for indicator_type, patterns in SUSPICIOUS_PATTERNS.items():
         for pattern in patterns:
             if pattern in lower_text:
-                indicators.append({"type": indicator_type, "pattern": pattern})
+                indicators.append({
+                    "type": indicator_type,
+                    "pattern": pattern,
+                })
 
+    # Check whether multiple sentences start with the same word.
     sentences = [
         sentence.strip()
         for sentence in re.split(r"[.!?]+", normalized_text)
         if sentence.strip()
     ]
+
     sentence_starts = [
         sentence.split()[0].lower()
         for sentence in sentences
         if sentence.split()
     ]
-    repeated_starts = {
-        start for start in sentence_starts if sentence_starts.count(start) >= 3
-    }
+
+    repeated_starts = sorted({
+        start
+        for start in sentence_starts
+        if sentence_starts.count(start) >= 3
+    })
 
     if repeated_starts:
         indicators.append({
             "type": "repeated_sentence_starts",
-            "pattern": ", ".join(sorted(repeated_starts)),
+            "pattern": ", ".join(repeated_starts),
         })
 
-    ai_probability = min(len(indicators) * 15, 60)
-    risk = "Medium" if ai_probability >= 45 else "Low"
+    # This measures detected indicators, not actual AI probability.
+    indicator_score = min(len(indicators) * 15, 60)
 
     return {
         "label": "Prototype Text Analysis",
-        "ai_probability": ai_probability,
-        "risk": risk,
+        "ai_probability": None,
+        "indicator_score": indicator_score,
+        "risk": "Unknown",
+        "message": (
+            "Text patterns were analyzed. These indicators cannot "
+            "reliably determine whether text was written by AI."
+        ),
         "word_count": len(words),
         "character_count": len(normalized_text),
         "suspicious_patterns": indicators,

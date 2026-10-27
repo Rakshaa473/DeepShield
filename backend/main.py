@@ -1,9 +1,11 @@
+
 import os
 import shutil
 import tempfile
 from pathlib import Path
+from typing import Any
 
-from fastapi import BackgroundTasks, Body, FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 
 from model.image_detector import detect_image
@@ -22,20 +24,13 @@ from model.text_detector import analyze_text
 
 app = FastAPI(
     title="DeepShield AI Backend",
-    description="AI-powered multimedia authenticity and deepfake detection API",
-    version="1.0.0",
+    description="AI-powered multimedia authenticity analysis API",
+    version="1.1.0",
 )
 
 
 # ============================================================
 # CORS
-# ============================================================
-#
-# Allows:
-# - Local Next.js development
-# - Production Vercel frontend
-# - Optional FRONTEND_URL environment variable
-#
 # ============================================================
 
 allowed_origins = [
@@ -44,16 +39,13 @@ allowed_origins = [
     "https://deepshield-app.vercel.app",
 ]
 
-# Optional additional frontend URLs from Render environment variable
 frontend_url = os.getenv("FRONTEND_URL", "")
 
 if frontend_url:
     for origin in frontend_url.split(","):
         origin = origin.strip()
-
         if origin and origin not in allowed_origins:
             allowed_origins.append(origin)
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -65,32 +57,18 @@ app.add_middleware(
 
 
 # ============================================================
-# UPLOAD FOLDER
+# UPLOAD STORAGE
 # ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent
-
 UPLOAD_FOLDER = BASE_DIR / "uploads"
-
-UPLOAD_FOLDER.mkdir(
-    parents=True,
-    exist_ok=True,
-)
+UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 
 
-# ============================================================
-# FILE HELPERS
-# ============================================================
+def save_upload(file: UploadFile) -> Path:
+    """Save an upload to a uniquely named temporary file."""
 
-def save_upload(file: UploadFile):
-    """
-    Save an uploaded file using a generated temporary filename.
-    Returns the Path of the saved file.
-    """
-
-    extension = Path(
-        file.filename or ""
-    ).suffix.lower()
+    extension = Path(file.filename or "").suffix.lower()
 
     temporary_file = tempfile.NamedTemporaryFile(
         dir=UPLOAD_FOLDER,
@@ -99,43 +77,178 @@ def save_upload(file: UploadFile):
         delete=False,
     )
 
+    filepath = Path(temporary_file.name)
+
     try:
-
         with temporary_file:
-            shutil.copyfileobj(
-                file.file,
-                temporary_file,
-            )
-
+            shutil.copyfileobj(file.file, temporary_file)
     except Exception:
-
-        Path(
-            temporary_file.name
-        ).unlink(
-            missing_ok=True
-        )
-
+        filepath.unlink(missing_ok=True)
         raise
 
-    return Path(
-        temporary_file.name
-    )
+    return filepath
 
 
-def remove_upload(filepath):
-    """
-    Delete uploaded file after processing.
-    """
+def remove_upload(filepath: Path) -> None:
+    """Remove a temporary upload."""
 
     try:
+        filepath.unlink(missing_ok=True)
+    except OSError as error:
+        print(f"Could not remove temporary upload: {error}")
 
-        Path(filepath).unlink(
-            missing_ok=True
+
+def require_result_dict(result: Any, detector_name: str) -> dict:
+    """Reject malformed detector output instead of inventing a result."""
+
+    if not isinstance(result, dict):
+        raise HTTPException(
+            status_code=500,
+            detail=f"{detector_name} returned an invalid result.",
         )
 
-    except Exception:
+    return result
 
+
+def valid_probability(value: Any) -> float | None:
+    """Accept a probability only if it is a finite number from 0 to 100."""
+
+    if isinstance(value, bool):
+        return None
+
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+
+    if not os.path.exists("/dev/null"):
+        # No platform-specific operation is needed here.
         pass
+
+    if number != number or number in (float("inf"), float("-inf")):
+        return None
+
+    if not 0 <= number <= 100:
+        return None
+
+    return number
+
+
+# ============================================================
+# IMAGE LABEL INTERPRETATION
+# ============================================================
+
+def interpret_image_prediction(
+    predictions: Any,
+) -> dict:
+    """
+    Interpret predictions only when labels clearly indicate
+    AI-generated/fake versus real/authentic content.
+
+    Labels from NSFW, object, scene, or general image classifiers
+    are not evidence of image authenticity.
+    """
+
+    if not isinstance(predictions, list) or not predictions:
+        return {
+            "usable": False,
+            "label": "Inconclusive",
+            "ai_probability": None,
+            "model_confidence": None,
+        }
+
+    top = predictions[0]
+
+    if not isinstance(top, dict):
+        return {
+            "usable": False,
+            "label": "Inconclusive",
+            "ai_probability": None,
+            "model_confidence": None,
+        }
+
+    raw_label = str(top.get("label", "")).strip()
+    label = raw_label.lower().replace("_", " ").replace("-", " ")
+
+    try:
+        confidence = float(top.get("score"))
+    except (TypeError, ValueError):
+        confidence = -1
+
+    if not 0 <= confidence <= 1:
+        return {
+            "usable": False,
+            "label": "Inconclusive",
+            "ai_probability": None,
+            "model_confidence": None,
+        }
+
+    confidence_percent = confidence * 100
+
+    # Do not confuse these labels with authenticity predictions.
+    unrelated_labels = {
+        "nsfw",
+        "normal",
+        "porn",
+        "sexy",
+        "hentai",
+        "drawing",
+        "drawings",
+        "neutral",
+        "safe",
+        "unsafe",
+    }
+
+    if label in unrelated_labels:
+        return {
+            "usable": False,
+            "label": "Inconclusive",
+            "ai_probability": None,
+            "model_confidence": confidence_percent,
+        }
+
+    fake_labels = {
+        "fake",
+        "ai generated",
+        "ai-generated",
+        "synthetic",
+        "generated",
+        "artificial",
+        "deepfake",
+        "manipulated",
+    }
+
+    real_labels = {
+        "real",
+        "real image",
+        "authentic",
+        "genuine",
+        "human",
+        "natural",
+    }
+
+    if label in fake_labels:
+        return {
+            "usable": True,
+            "label": "AI-Generated / Manipulated",
+            "ai_probability": confidence_percent,
+            "model_confidence": confidence_percent,
+        }
+
+    if label in real_labels:
+        return {
+            "usable": True,
+            "label": "Likely Real",
+            "ai_probability": 100 - confidence_percent,
+            "model_confidence": confidence_percent,
+        }
+
+    return {
+        "usable": False,
+        "label": "Inconclusive",
+        "ai_probability": None,
+        "model_confidence": confidence_percent,
+    }
 
 
 # ============================================================
@@ -144,10 +257,16 @@ def remove_upload(filepath):
 
 @app.get("/")
 def home():
-
     return {
-        "message": "DeepShield AI Backend Running 🚀"
+        "message": "DeepShield AI Backend Running",
+        "version": "1.1.0",
+        "status": "online",
     }
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 
 # ============================================================
@@ -155,204 +274,118 @@ def home():
 # ============================================================
 
 @app.post("/detect-image")
-async def detect_image_endpoint(
-    file: UploadFile = File(...),
-    background_tasks: BackgroundTasks = None,
-):
-
-    # --------------------------------------------------------
-    # Save uploaded image
-    # --------------------------------------------------------
-
+async def detect_image_endpoint(file: UploadFile = File(...)):
     filename = file.filename or "image"
-
     filepath = save_upload(file)
 
-    if background_tasks:
-        background_tasks.add_task(
-            remove_upload,
-            filepath,
-        )
-
-
-    # --------------------------------------------------------
-    # IMAGE AI MODEL
-    # --------------------------------------------------------
-
     try:
+        try:
+            predictions = detect_image(str(filepath))
+        except Exception as error:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Image model failed: {error}",
+            ) from error
 
-        predictions = detect_image(
-            str(filepath)
+        interpretation = interpret_image_prediction(predictions)
+
+        # OCR is optional. Failure to run OCR must not be treated
+        # as evidence that an image is real or fake.
+        extracted_text = ""
+
+        try:
+            extracted_text = extract_text(str(filepath)) or ""
+        except Exception as error:
+            print(f"OCR unavailable: {error}")
+
+        try:
+            metadata_result = analyze_metadata(str(filepath))
+            if not isinstance(metadata_result, dict):
+                metadata_result = {}
+        except Exception as error:
+            print(f"Metadata analysis unavailable: {error}")
+            metadata_result = {}
+
+        metadata = metadata_result.get("metadata", {})
+        if not isinstance(metadata, dict):
+            metadata = {}
+
+        metadata_probability = valid_probability(
+            metadata_result.get("ai_probability")
         )
 
-    except Exception as error:
+        if metadata_probability is None:
+            metadata_probability = None
 
-        raise HTTPException(
-            status_code=500,
-            detail=f"Image detection failed: {error}",
-        ) from error
+        # No validated authenticity prediction means we must not
+        # manufacture a fake/real answer from unrelated signals.
+        if not interpretation["usable"]:
+            return {
+                "filename": filename,
+                "score": 50,
+                "label": "Inconclusive",
+                "risk": "Medium",
+                "text": extracted_text,
+                "metadata": metadata,
+                "metadata_ai_probability": metadata_probability,
+                "image_model_score": None,
+                "image_model_label": (
+                    str(predictions[0].get("label", "Unknown"))
+                    if isinstance(predictions, list)
+                    and predictions
+                    and isinstance(predictions[0], dict)
+                    else "Unknown"
+                ),
+                "model_confidence": interpretation["model_confidence"],
+                "image_ai_probability": None,
+                "ela_score": None,
+                "message": (
+                    "The current image model does not provide a "
+                    "recognized authenticity prediction. Replace it "
+                    "with a model trained for AI-generated image detection."
+                ),
+            }
 
+        image_probability = interpretation["ai_probability"]
 
-    # --------------------------------------------------------
-    # Handle empty prediction
-    # --------------------------------------------------------
+        # The score engine is used only when the image model returns
+        # an explicitly recognized authenticity label.
+        try:
+            final_score, final_label, risk = calculate_score(
+    image_probability,
+    metadata_probability,
+    None,
+    extracted_text,
+)
 
-    if not predictions:
+        except Exception as error:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Score calculation failed: {error}",
+            ) from error
 
         return {
             "filename": filename,
-            "label": "Unknown",
-            "risk": "Medium",
-            "score": 0,
-            "text": "",
-            "metadata": {},
-            "metadata_ai_probability": 0,
-            "image_model_score": 0,
-            "image_model_label": "Unknown",
-            "ela_score": 0,
+            "score": final_score,
+            "label": final_label,
+            "risk": risk,
+            "text": extracted_text,
+            "metadata": metadata,
+            "metadata_ai_probability": metadata_probability,
+            "image_model_score": image_probability,
+            "image_model_label": interpretation["label"],
+            "model_confidence": interpretation["model_confidence"],
+            "image_ai_probability": image_probability,
+            "ela_score": None,
+            "message": (
+                "Experimental estimate only; results are not proof "
+                "of authenticity."
+            ),
         }
 
-
-    # --------------------------------------------------------
-    # Top AI model prediction
-    # --------------------------------------------------------
-
-    top = predictions[0]
-
-    image_score = float(
-        top.get(
-            "score",
-            0,
-        )
-    ) * 100
-
-    model_label = str(
-        top.get(
-            "label",
-            "Unknown",
-        )
-    )
-
-
-    # --------------------------------------------------------
-    # METADATA ANALYSIS
-    # --------------------------------------------------------
-
-    try:
-
-        metadata_result = analyze_metadata(
-            str(filepath)
-        )
-
-    except Exception:
-
-        metadata_result = {
-            "metadata": {},
-            "ai_probability": 0,
-        }
-
-
-    metadata_score = float(
-        metadata_result.get(
-            "ai_probability",
-            0,
-        )
-    )
-
-
-    # --------------------------------------------------------
-    # OCR
-    # --------------------------------------------------------
-    #
-    # IMPORTANT:
-    # Render does not have the Tesseract executable installed.
-    # Therefore OCR must not be allowed to crash the complete
-    # image detection request.
-    #
-    # If Tesseract is unavailable, we simply continue with
-    # extracted_text = "".
-    #
-    # --------------------------------------------------------
-
-    extracted_text = ""
-
-    try:
-
-        extracted_text = extract_text(
-            str(filepath)
-        )
-
-        if extracted_text is None:
-            extracted_text = ""
-
-    except Exception:
-
-        extracted_text = ""
-
-
-    # --------------------------------------------------------
-    # ELA
-    # --------------------------------------------------------
-    #
-    # Current project uses 0 as the default ELA score.
-    #
-    # --------------------------------------------------------
-
-    ela_score = 0
-
-
-    # --------------------------------------------------------
-    # COMBINED SCORING
-    # --------------------------------------------------------
-
-    try:
-
-        final_score, final_label, risk = calculate_score(
-            image_score,
-            metadata_score,
-            ela_score,
-            extracted_text,
-        )
-
-    except Exception as error:
-
-        raise HTTPException(
-            status_code=500,
-            detail=f"Score calculation failed: {error}",
-        ) from error
-
-
-    # --------------------------------------------------------
-    # RETURN RESULT
-    # --------------------------------------------------------
-
-    return {
-        "filename": filename,
-
-        "score": final_score,
-
-        "label": final_label,
-
-        "risk": risk,
-
-        "text": extracted_text,
-
-        "metadata": metadata_result.get(
-            "metadata",
-            {},
-        ),
-
-        "metadata_ai_probability": metadata_score,
-
-        "image_model_score": round(
-            image_score,
-            2,
-        ),
-
-        "image_model_label": model_label,
-
-        "ela_score": ela_score,
-    }
+    finally:
+        remove_upload(filepath)
+        await file.close()
 
 
 # ============================================================
@@ -360,105 +393,61 @@ async def detect_image_endpoint(
 # ============================================================
 
 @app.post("/detect-document")
-async def detect_document(
-    file: UploadFile = File(...),
-    background_tasks: BackgroundTasks = None,
-):
-
-    # --------------------------------------------------------
-    # Save document
-    # --------------------------------------------------------
-
+async def detect_document_endpoint(file: UploadFile = File(...)):
     filename = file.filename or "document"
-
     filepath = save_upload(file)
 
-    if background_tasks:
-        background_tasks.add_task(
-            remove_upload,
-            filepath,
-        )
-
-
-    # --------------------------------------------------------
-    # Analyze document
-    # --------------------------------------------------------
-
     try:
+        try:
+            result = analyze_document(str(filepath))
+        except Exception as error:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Document analysis failed: {error}",
+            ) from error
 
-        result = analyze_document(
-            str(filepath)
-        )
+        result = require_result_dict(result, "Document detector")
 
-    except Exception as error:
+        probability = valid_probability(result.get("ai_probability"))
 
-        raise HTTPException(
-            status_code=500,
-            detail=f"Document analysis failed: {error}",
-        ) from error
+        if probability is None:
+            return {
+                "filename": filename,
+                "label": "Inconclusive",
+                "risk": "Unknown",
+                "ai_probability": None,
+                "word_count": result.get("word_count", 0),
+                "character_count": result.get("character_count", 0),
+                "suspicious_keywords": result.get("suspicious_keywords", []),
+                "text": result.get("text", ""),
+                "message": "The document detector did not return a valid probability.",
+            }
 
+        if probability >= 70:
+            risk = "High"
+        elif probability >= 40:
+            risk = "Medium"
+        else:
+            risk = "Low"
 
-    # --------------------------------------------------------
-    # AI probability
-    # --------------------------------------------------------
+        return {
+            "filename": filename,
+            "label": result.get("label", "Document Analysis"),
+            "risk": risk,
+            "ai_probability": round(probability, 2),
+            "word_count": result.get("word_count", 0),
+            "character_count": result.get("character_count", 0),
+            "suspicious_keywords": result.get("suspicious_keywords", []),
+            "text": result.get("text", ""),
+            "message": (
+                "This is a heuristic estimate, not proof that a "
+                "document is authentic or manipulated."
+            ),
+        }
 
-    ai_probability = result.get(
-        "ai_probability",
-        0,
-    )
-
-
-    # --------------------------------------------------------
-    # Risk
-    # --------------------------------------------------------
-
-    if ai_probability >= 70:
-
-        risk = "High"
-
-    elif ai_probability >= 40:
-
-        risk = "Medium"
-
-    else:
-
-        risk = "Low"
-
-
-    # --------------------------------------------------------
-    # Return result
-    # --------------------------------------------------------
-
-    return {
-
-        "filename": filename,
-
-        "label": "Document Analysis",
-
-        "risk": risk,
-
-        "ai_probability": ai_probability,
-
-        "word_count": result.get(
-            "word_count",
-            0,
-        ),
-
-        "character_count": result.get(
-            "character_count",
-            0,
-        ),
-
-        "suspicious_keywords": result.get(
-            "suspicious_keywords",
-            [],
-        ),
-
-        "text": result.get(
-            "text",
-            "",
-        ),
-    }
+    finally:
+        remove_upload(filepath)
+        await file.close()
 
 
 # ============================================================
@@ -466,78 +455,60 @@ async def detect_document(
 # ============================================================
 
 @app.post("/detect-audio")
-async def detect_audio_endpoint(
-    file: UploadFile = File(...),
-    background_tasks: BackgroundTasks = None,
-):
-
+async def detect_audio_endpoint(file: UploadFile = File(...)):
     filename = file.filename or "audio"
-
-    extension = os.path.splitext(
-        filename
-    )[1].lower()
-
-
-    # --------------------------------------------------------
-    # Check format
-    # --------------------------------------------------------
+    extension = Path(filename).suffix.lower()
 
     if extension not in SUPPORTED_AUDIO_EXTENSIONS:
-
-        supported_formats = ", ".join(
-            sorted(
-                SUPPORTED_AUDIO_EXTENSIONS
-            )
-        )
-
         raise HTTPException(
             status_code=400,
             detail=(
-                "Unsupported audio format. "
-                f"Supported formats: {supported_formats}"
+                "Unsupported audio format. Supported formats: "
+                + ", ".join(sorted(SUPPORTED_AUDIO_EXTENSIONS))
             ),
         )
 
-
-    # --------------------------------------------------------
-    # Save audio
-    # --------------------------------------------------------
-
     filepath = save_upload(file)
 
-    if background_tasks:
-        background_tasks.add_task(
-            remove_upload,
-            filepath,
-        )
-
-
-    # --------------------------------------------------------
-    # Analyze audio
-    # --------------------------------------------------------
-
     try:
+        try:
+            result = analyze_audio(str(filepath))
+        except Exception as error:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Audio analysis failed: {error}",
+            ) from error
 
-        result = analyze_audio(
-            str(filepath)
-        )
+        result = require_result_dict(result, "Audio detector")
 
-    except Exception as error:
+        # Preserve the detector's actual output. Do not silently
+        # replace a missing label or score with "Real".
+        if not result or not any(
+            key in result
+            for key in (
+                "label",
+                "prediction",
+                "risk",
+                "score",
+                "ai_probability",
+                "fake_probability",
+            )
+        ):
+            result = {
+                **result,
+                "label": "Inconclusive",
+                "risk": "Unknown",
+                "message": (
+                    "The audio detector did not return an authenticity "
+                    "prediction. Check its model and output mapping."
+                ),
+            }
 
-        raise HTTPException(
-            status_code=400,
-            detail=f"Audio analysis failed: {error}",
-        ) from error
+        return {"filename": filename, **result}
 
-
-    # --------------------------------------------------------
-    # Return result
-    # --------------------------------------------------------
-
-    return {
-        "filename": filename,
-        **result,
-    }
+    finally:
+        remove_upload(filepath)
+        await file.close()
 
 
 # ============================================================
@@ -545,78 +516,58 @@ async def detect_audio_endpoint(
 # ============================================================
 
 @app.post("/detect-video")
-async def detect_video_endpoint(
-    file: UploadFile = File(...),
-    background_tasks: BackgroundTasks = None,
-):
-
+async def detect_video_endpoint(file: UploadFile = File(...)):
     filename = file.filename or "video"
-
-    extension = os.path.splitext(
-        filename
-    )[1].lower()
-
-
-    # --------------------------------------------------------
-    # Check format
-    # --------------------------------------------------------
+    extension = Path(filename).suffix.lower()
 
     if extension not in SUPPORTED_VIDEO_EXTENSIONS:
-
-        supported_formats = ", ".join(
-            sorted(
-                SUPPORTED_VIDEO_EXTENSIONS
-            )
-        )
-
         raise HTTPException(
             status_code=400,
             detail=(
-                "Unsupported video format. "
-                f"Supported formats: {supported_formats}"
+                "Unsupported video format. Supported formats: "
+                + ", ".join(sorted(SUPPORTED_VIDEO_EXTENSIONS))
             ),
         )
 
-
-    # --------------------------------------------------------
-    # Save video
-    # --------------------------------------------------------
-
     filepath = save_upload(file)
 
-    if background_tasks:
-        background_tasks.add_task(
-            remove_upload,
-            filepath,
-        )
-
-
-    # --------------------------------------------------------
-    # Analyze video
-    # --------------------------------------------------------
-
     try:
+        try:
+            result = analyze_video(str(filepath))
+        except Exception as error:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Video analysis failed: {error}",
+            ) from error
 
-        result = analyze_video(
-            str(filepath)
-        )
+        result = require_result_dict(result, "Video detector")
 
-    except Exception as error:
+        if not result or not any(
+            key in result
+            for key in (
+                "label",
+                "prediction",
+                "risk",
+                "score",
+                "ai_probability",
+                "fake_probability",
+            )
+        ):
+            result = {
+                **result,
+                "label": "Inconclusive",
+                "risk": "Unknown",
+                "message": (
+                    "The video detector did not return an authenticity "
+                    "prediction. Check its frame analysis and score mapping."
+                ),
+            }
 
-        raise HTTPException(
-            status_code=400,
-            detail=f"Video analysis failed: {error}",
-        ) from error
+        return {"filename": filename, **result}
 
-
-    # --------------------------------------------------------
-    # Return result
-    # --------------------------------------------------------
-
-    return {
-        "filename": filename,
-        **result,
-    }
+    finally:
+        remove_upload(filepath)
+        await file.close()
 
 
 # ============================================================
@@ -624,47 +575,45 @@ async def detect_video_endpoint(
 # ============================================================
 
 @app.post("/detect-text")
-async def detect_text_endpoint(
-    payload: dict = Body(...),
-):
+async def detect_text_endpoint(payload: dict = Body(...)):
+    text = payload.get("text")
 
-    # --------------------------------------------------------
-    # Get text
-    # --------------------------------------------------------
-
-    text = payload.get(
-        "text"
-    )
-
-
-    # --------------------------------------------------------
-    # Validate
-    # --------------------------------------------------------
-
-    if not isinstance(
-        text,
-        str,
-    ) or not text.strip():
-
+    if not isinstance(text, str) or not text.strip():
         raise HTTPException(
             status_code=400,
             detail="Text is required for analysis.",
         )
 
-
-    # --------------------------------------------------------
-    # Analyze
-    # --------------------------------------------------------
-
     try:
-
-        return analyze_text(
-            text
-        )
-
+        result = analyze_text(text)
     except Exception as error:
-
         raise HTTPException(
             status_code=500,
             detail=f"Text analysis failed: {error}",
         ) from error
+
+    result = require_result_dict(result, "Text detector")
+
+    # Do not force a missing detector result to "Real".
+    if not result or not any(
+        key in result
+        for key in (
+            "label",
+            "prediction",
+            "risk",
+            "score",
+            "ai_probability",
+            "fake_probability",
+        )
+    ):
+        return {
+            **result,
+            "label": "Inconclusive",
+            "risk": "Unknown",
+            "message": (
+                "The text detector did not return a prediction. "
+                "AI-text detection is probabilistic and cannot prove authorship."
+            ),
+        }
+
+    return result

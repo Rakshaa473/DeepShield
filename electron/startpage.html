@@ -1,0 +1,1521 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepShield — Explore with clarity</title>
+<style>
+
+/* DEEPSHIELD — LARGE, READABLE HOMEPAGE UPDATE */
+
+:root {
+  --ink: #f7f5ff;
+  --muted: #d0d6ee;
+  --violet: #b68bff;
+  --cyan: #72dff0;
+  --glass: rgba(15, 25, 52, 0.78);
+  --line: rgba(220, 225, 255, 0.24);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  font-size: 16px;
+  background: #0b1224;
+}
+
+.app-sidebar {
+  width: 126px;
+  gap: 17px;
+  padding: 28px 12px;
+  background: rgba(7, 15, 32, 0.94);
+}
+
+.app-sidebar a {
+  width: 100px;
+  min-height: 82px;
+  gap: 9px;
+  border-radius: 17px;
+  font-size: 31px;
+}
+
+.app-sidebar small {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.layout {
+  margin-left: 126px;
+  min-height: 100vh;
+}
+
+
+/* DEEPSHIELD — REFERENCE-INSPIRED NIGHT LANDSCAPE */
+
+.scene {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(
+      ellipse at 50% 53%,
+      rgba(255, 190, 199, 0.68) 0%,
+      rgba(195, 137, 183, 0.36) 17%,
+      transparent 43%
+    ),
+    linear-gradient(
+      180deg,
+      #0a1229 0%,
+      #172448 26%,
+      #34375f 43%,
+      #9a6e91 56%,
+      #38436b 72%,
+      #101c39 100%
+    );
+}
+
+.moon {
+  position: absolute;
+  width: 104px;
+  height: 104px;
+  left: calc(50% - 52px);
+  top: 43%;
+  border-radius: 50%;
+  background: #ffdcd3;
+  box-shadow:
+    0 0 35px 12px rgba(255, 203, 209, 0.22),
+    0 0 95px 38px rgba(242, 157, 190, 0.18);
+  opacity: 0.72;
+}
+
+.ridge {
+  position: absolute;
+  left: -8%;
+  width: 116%;
+  bottom: 19%;
+  height: 46%;
+  background: #3b426d;
+  clip-path: polygon(
+    0 64%, 9% 42%, 17% 55%, 27% 22%,
+    37% 58%, 49% 30%, 59% 55%, 70% 18%,
+    80% 48%, 90% 27%, 100% 57%,
+    100% 100%, 0 100%
+  );
+}
+
+.ridge.back {
+  bottom: 14%;
+  height: 41%;
+  background: #26365e;
+  opacity: 0.96;
+  transform: scaleX(-1);
+}
+
+.ridge.front {
+  bottom: 7%;
+  height: 31%;
+  background: #111c38;
+  clip-path: polygon(
+    0 45%, 13% 25%, 24% 48%, 39% 18%,
+    52% 47%, 64% 20%, 77% 49%, 90% 24%,
+    100% 45%, 100% 100%, 0 100%
+  );
+}
+
+.water {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 28%;
+  background: linear-gradient(
+    180deg,
+    rgba(188, 133, 173, 0.42) 0%,
+    #192b50 36%,
+    #09142c 100%
+  );
+}
+
+.water::before {
+  content: "";
+  position: absolute;
+  top: 8%;
+  left: 37%;
+  width: 26%;
+  height: 85%;
+  opacity: 0.43;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 207, 216, 0.68) 0 2px,
+    transparent 2px 13px
+  );
+  clip-path: polygon(35% 0, 65% 0, 100% 100%, 0 100%);
+}
+
+header {
+  height: 64px;
+  padding: 0 30px;
+}
+
+.brand {
+  gap: 13px;
+  font-size: 23px;
+}
+
+.logo {
+  width: 42px;
+  height: 42px;
+  font-size: 25px;
+}
+
+main {
+  width: min(1240px, 100%);
+  padding: 36px 36px 30px;
+}
+
+.hero {
+  padding: 20px 0 35px;
+}
+
+.eyebrow {
+  padding: 10px 16px;
+  font-size: 13px;
+  letter-spacing: 1.2px;
+}
+
+.pulse {
+  width: 9px;
+  height: 9px;
+}
+
+.emblem {
+  width: 110px;
+  height: 112px;
+  margin: 26px auto 16px;
+  font-size: 82px;
+}
+
+h1 {
+  font-size: clamp(52px, 5vw, 72px);
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+}
+
+.tagline {
+  margin: 16px 0 30px;
+  font-size: 21px;
+  line-height: 1.5;
+}
+
+.tagline + .tagline {
+  margin-top: -17px;
+  font-size: 17px;
+}
+
+.search {
+  width: min(790px, 100%);
+  gap: 16px;
+  padding: 9px 10px 9px 25px;
+}
+
+.search-symbol {
+  font-size: 30px;
+}
+
+.search input {
+  padding: 15px 0;
+  font-size: 19px;
+}
+
+.search button {
+  width: 50px;
+  height: 50px;
+  font-size: 27px;
+}
+
+.section-title {
+  margin: 16px 0;
+  font-size: 16px;
+}
+
+.section-title span {
+  font-size: 14px;
+}
+
+.shortcuts {
+  gap: 14px;
+}
+
+.shortcut {
+  min-height: 120px;
+  gap: 12px;
+  padding: 15px 8px;
+  border-radius: 19px;
+  background: rgba(16, 28, 57, 0.76);
+}
+
+.shortcut-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  font-size: 28px;
+}
+
+.shortcut strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.cards {
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.feature {
+  min-height: 126px;
+  gap: 17px;
+  padding: 22px;
+  border-radius: 22px;
+  background: linear-gradient(
+    115deg,
+    rgba(30, 32, 73, 0.94),
+    rgba(13, 40, 66, 0.94)
+  );
+}
+
+.feature-icon {
+  width: 58px;
+  height: 58px;
+  font-size: 30px;
+}
+
+.feature strong {
+  font-size: 18px;
+}
+
+.feature p {
+  margin-top: 9px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.arrow {
+  font-size: 27px;
+}
+
+footer {
+  padding-top: 24px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 1000px) {
+  .app-sidebar {
+    width: 88px;
+    padding-inline: 7px;
+  }
+
+  .app-sidebar a {
+    width: 72px;
+    min-height: 70px;
+    font-size: 27px;
+  }
+
+  .app-sidebar small {
+    font-size: 12px;
+  }
+
+  .layout {
+    margin-left: 88px;
+  }
+
+  main {
+    padding: 26px 22px;
+  }
+
+  .shortcuts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  main {
+    padding: 20px 14px;
+  }
+
+  h1 {
+    font-size: 44px;
+  }
+
+  .tagline {
+    font-size: 17px;
+  }
+
+  .shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .feature {
+    padding: 16px;
+  }
+}
+
+    .app-sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 24px 8px;
+  background: rgba(9, 15, 35, .82);
+  border-right: 1px solid rgba(225, 229, 255, .18);
+  backdrop-filter: blur(18px);
+  z-index: 5;
+}
+
+.app-sidebar a {
+  width: 60px;
+  min-height: 62px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: #d5d9f4;
+  font-size: 25px;
+}
+
+.app-sidebar small {
+  font-size: 11px;
+}
+
+.app-sidebar a:hover {
+  background: rgba(184, 161, 255, .18);
+  color: #fff;
+}
+
+.app-sidebar small {
+  font-size: 10px;
+}
+
+.layout {
+  margin-left: 76px;
+  min-height: 100vh;
+}
+:root {
+  --ink: #f7f5ff;
+  --muted: #c2c6e0;
+  --violet: #b8a1ff;
+  --cyan: #79e6e7;
+  --glass: rgba(16, 24, 49, .66);
+  --line: rgba(225, 229, 255, .19);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  min-height: 100vh;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--ink);
+  background: #10152c;
+}
+.scene {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 52% 48%, rgba(255,202,191,.8) 0%, rgba(174,139,214,.4) 15%, transparent 39%),
+    linear-gradient(180deg, #172348 0%, #403c70 34%, #d39bb2 60%, #26365f 78%, #0c1935 100%);
+}
+.moon {
+  position: absolute;
+  width: 76px;
+  height: 76px;
+  left: calc(50% - 38px);
+  top: 42%;
+  border-radius: 50%;
+  background: #ffe7d1;
+  box-shadow: 0 0 65px 18px rgba(255, 213, 205, .25);
+  opacity: .55;
+}
+.ridge {
+  position: absolute;
+  left: -8%;
+  width: 116%;
+  bottom: 19%;
+  height: 46%;
+  background: #354575;
+  clip-path: polygon(0 64%, 9% 42%, 17% 55%, 27% 22%, 37% 58%, 49% 30%, 59% 55%, 70% 18%, 80% 48%, 90% 27%, 100% 57%, 100% 100%, 0 100%);
+}
+.ridge.back {
+  bottom: 14%;
+  height: 41%;
+  background: #202f59;
+  opacity: .85;
+  transform: scaleX(-1);
+}
+.ridge.front {
+  bottom: 7%;
+  height: 31%;
+  background: #111d3c;
+  clip-path: polygon(0 45%, 13% 25%, 24% 48%, 39% 18%, 52% 47%, 64% 20%, 77% 49%, 90% 24%, 100% 45%, 100% 100%, 0 100%);
+}
+.water {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 28%;
+  background: linear-gradient(180deg, rgba(214,160,185,.4), #142548 40%, #0c1730);
+}
+.water::before {
+  content: "";
+  position: absolute;
+  top: 20%;
+  left: 34%;
+  width: 32%;
+  height: 75%;
+  opacity: .5;
+  background: repeating-linear-gradient(180deg, rgba(255,218,216,.6) 0 2px, transparent 2px 15px);
+  clip-path: polygon(32% 0, 68% 0, 100% 100%, 0 100%);
+}
+.layout { min-height: 100vh; display: flex; flex-direction: column; }
+header {
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 25px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(9, 15, 35, .42);
+  backdrop-filter: blur(18px);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .5px; }
+.logo {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: var(--cyan);
+  border: 1px solid rgba(121,230,231,.6);
+  border-radius: 10px 10px 14px 14px;
+  background: rgba(121,230,231,.08);
+  font-size: 19px;
+}
+.early { color: var(--muted); font-size: 11px; letter-spacing: 1.5px; }
+main {
+  width: min(1040px, 100%);
+  margin: auto;
+  padding: 38px 28px 24px;
+}
+.hero { text-align: center; padding: 14px 0 28px; }
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  background: rgba(12,21,45,.3);
+  color: #e0e2f7;
+  font-size: 11px;
+  letter-spacing: 1.1px;
+}
+.pulse {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan);
+}
+.emblem {
+  width: 77px;
+  height: 82px;
+  margin: 25px auto 12px;
+  display: grid;
+  place-items: center;
+  font-size: 59px;
+  color: #e1d5ff;
+  filter: drop-shadow(0 5px 24px rgba(180,154,255,.55));
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(42px, 5vw, 64px);
+  line-height: 1.08;
+  letter-spacing: -1.8px;
+  font-weight: 850;
+  text-shadow: 0 3px 28px rgba(20, 18, 51, .3);
+}
+
+h1 span {
+  background: linear-gradient(100deg, #ffffff 0%, #d6c6ff 48%, #8be9f0 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  font-weight: 900;
+}
+
+
+.tagline { margin: 13px 0 29px; color: #f0e8fa; font-size: 16px; }
+.search {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: min(690px, 100%);
+  margin: auto;
+  padding: 7px 8px 7px 20px;
+  border-radius: 40px;
+  background: rgba(250,249,255,.96);
+  box-shadow: 0 14px 45px rgba(5,10,28,.22);
+}
+.search-symbol { color: #4d5371; font-size: 24px; }
+.search input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #1c2340;
+  font-size: 15px;
+}
+.search input::placeholder { color: #81869f; }
+.search button {
+  width: 43px; height: 43px; border: 0; border-radius: 50%;
+  background: linear-gradient(140deg, #a992ff, #76e5e8);
+  color: #121a38; font-size: 22px; cursor: pointer;
+}
+.section-title {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 9px 0 13px; font-size: 12px;
+}
+.section-title span { color: #d3d5e9; font-size: 11px; }
+.shortcuts {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0,1fr));
+  gap: 12px;
+}
+.shortcut {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 98px; gap: 10px; padding: 12px 5px;
+  text-decoration: none; color: white;
+  border: 1px solid var(--line); border-radius: 17px;
+  background: rgba(20,27,53,.5);
+  backdrop-filter: blur(12px);
+  transition: .18s ease;
+}
+.shortcut:hover { transform: translateY(-3px); border-color: #b7a2ff; background: rgba(39,44,83,.75); }
+.shortcut-icon {
+  width: 40px; height: 40px; display: grid; place-items: center;
+  border-radius: 14px; background: rgba(239,236,255,.12);
+  font-size: 23px;
+}
+.shortcut strong { font-size: 12px; font-weight: 500; }
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 20px;
+}
+.feature {
+  display: flex; align-items: center; gap: 14px;
+  min-height: 110px; padding: 18px;
+  border: 1px solid rgba(184,161,255,.55);
+  border-radius: 19px;
+  background: linear-gradient(115deg, rgba(34,32,75,.83), rgba(15,42,65,.82));
+  color: white; text-decoration: none;
+  backdrop-filter: blur(16px);
+  transition: .2s;
+}
+.feature.safe { border-color: rgba(121,230,231,.55); }
+.feature:hover { transform: translateY(-2px); background-color: rgba(40,45,86,.9); }
+.feature-icon {
+  width: 49px; height: 49px; flex-shrink: 0;
+  display: grid; place-items: center; border-radius: 16px;
+  color: var(--violet); background: rgba(184,161,255,.15); font-size: 25px;
+}
+.safe .feature-icon { color: var(--cyan); background: rgba(121,230,231,.12); }
+.feature-copy { flex: 1; }
+.feature strong { font-size: 14px; }
+.feature p { margin: 7px 0 0; color: #d1d7ef; font-size: 12px; line-height: 1.55; }
+.arrow { font-size: 22px; color: var(--violet); }
+.safe .arrow { color: var(--cyan); }
+footer {
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding-top: 23px; color: #c4c9e2; font-size: 10px;
+}
+@media(max-width: 680px) {
+  main { padding: 25px 16px; }
+  header { padding: 0 16px; }
+  .shortcuts { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .cards { grid-template-columns: 1fr; }
+  .hero { padding-top: 22px; }
+  .early { display: none; }
+}
+
+/* EXTRA LARGE DISPLAY — DEEPSHIELD */
+
+.app-sidebar {
+  width: 140px !important;
+}
+
+.layout {
+  margin-left: 140px !important;
+}
+
+.app-sidebar a {
+  min-height: 88px !important;
+  font-size: 35px !important;
+}
+
+.app-sidebar small {
+  font-size: 15px !important;
+}
+
+main {
+  width: min(1360px, 100%) !important;
+  padding: 28px 40px 36px !important;
+}
+
+.emblem {
+  font-size: 96px !important;
+  width: 120px !important;
+  height: 120px !important;
+}
+
+h1 {
+  font-size: clamp(60px, 5.5vw, 82px) !important;
+}
+
+.tagline {
+  font-size: 22px !important;
+}
+
+.search {
+  width: min(850px, 100%) !important;
+  min-height: 72px !important;
+}
+
+.search input {
+  font-size: 20px !important;
+}
+
+.shortcut {
+  min-height: 135px !important;
+}
+
+.shortcut strong {
+  font-size: 16px !important;
+}
+
+.feature {
+  min-height: 140px !important;
+}
+
+.feature strong {
+  font-size: 20px !important;
+}
+
+.feature p {
+  font-size: 16px !important;
+}
+
+footer {
+  font-size: 13px !important;
+}
+
+/* DeepShield built-in tools */
+.tool-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(5, 10, 26, 0.78);
+  backdrop-filter: blur(12px);
+}
+
+.tool-overlay.open {
+  display: flex;
+}
+
+.tool-dialog {
+  width: min(620px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 28px;
+  color: #f7f5ff;
+  background: linear-gradient(145deg, #172443, #101b35);
+  border: 1px solid rgba(185, 165, 255, 0.55);
+  border-radius: 22px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+}
+
+.tool-dialog h2 {
+  margin: 0 0 10px;
+  font-size: 27px;
+}
+
+.tool-dialog p {
+  color: #d0d8ed;
+  line-height: 1.6;
+}
+
+.tool-dialog input {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 15px;
+  color: #17213b;
+  background: #f7f5ff;
+  border: 1px solid #b9a5ff;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.tool-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.tool-actions button {
+  padding: 12px 17px;
+  color: #10182e;
+  background: linear-gradient(120deg, #b9a5ff, #75e8df);
+  border: 0;
+  border-radius: 11px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tool-actions .secondary {
+  color: #f7f5ff;
+  background: #293858;
+  border: 1px solid #435477;
+}
+
+.tool-result {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(8, 15, 33, 0.65);
+  border: 1px solid #354566;
+  overflow-wrap: anywhere;
+}
+
+.tool-result:empty {
+  display: none;
+}
+
+.tool-result a,
+.resource-list a {
+  color: #8ce8f0;
+}
+
+.resource-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.resource-list a {
+  display: block;
+  padding: 15px;
+  color: #f7f5ff;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid #354566;
+  border-radius: 12px;
+  text-decoration: none;
+}
+
+.resource-list a:hover {
+  border-color: #75e8df;
+  background: rgba(117, 232, 223, 0.08);
+}
+
+.resource-list small {
+  display: block;
+  margin-top: 5px;
+  color: #c5cfe5;
+  line-height: 1.5;
+}
+
+</style>
+</head>
+<body>
+    <aside class="app-sidebar">
+  <a href="startpage.html" title="Home">⌂<small>Home</small></a>
+  <a href="https://deepshield-app.vercel.app" title="Analyzer">⛨<small>Analyzer</small></a>
+  <a href="#" id="bookmarksLink" title="Bookmarks">☆<small>Bookmarks</small></a>
+  <a href="#" id="historyLink" title="History">
+  ◷<small>History</small>
+</a>
+  <a href="#" id="downloadsLink" title="Downloads">↓<small>Downloads</small></a>
+  <a href="#" id="settingsLink" title="Settings">⚙<small>Settings</small></a>
+</aside>
+<div class="scene">
+  <div class="moon"></div>
+  <div class="ridge"></div>
+  <div class="ridge back"></div>
+  <div class="water"></div>
+  <div class="ridge front"></div>
+</div>
+
+<div class="layout">
+
+
+  <main>
+    <section class="hero">
+      <div class="eyebrow"><span class="pulse"></span> YOUR SPACE, YOUR PACE</div>
+      <div class="emblem">⛨</div>
+      <h1><span>DeepShield</span></h1>
+<p class="tagline">Safer browsing. Smarter internet.</p>
+      <p class="tagline">A quieter, more thoughtful space for the open web.</p>
+
+      <form class="search" id="searchForm">
+        <span class="search-symbol">⌕</span>
+        <input id="query" placeholder="Search the web or enter a website" autocomplete="off" spellcheck="false" aria-label="Search the web or enter a website">
+        <button type="submit" aria-label="Search">→</button>
+      </form>
+    </section>
+
+    <div class="section-title">
+      <strong>Quick destinations</strong>
+      <span>Your web, one step away</span>
+    </div>
+
+    <section class="shortcuts">
+      <a class="shortcut" href="https://www.youtube.com"><span class="shortcut-icon">▷</span><strong>YouTube</strong></a>
+      <a class="shortcut" href="https://www.google.com"><span class="shortcut-icon">G</span><strong>Google</strong></a>
+      <a class="shortcut" href="https://github.com"><span class="shortcut-icon">⌘</span><strong>GitHub</strong></a>
+      <a class="shortcut" href="https://www.wikipedia.org"><span class="shortcut-icon">W</span><strong>Wikipedia</strong></a>
+      <a class="shortcut" href="https://www.khanacademy.org"><span class="shortcut-icon">✧</span><strong>Study</strong></a>
+      <a class="shortcut" href="#" id="addShortcut"><span class="shortcut-icon">＋</span><strong>Add shortcut</strong></a>
+    </section>
+
+
+<section class="cards">
+  <a class="feature" href="#" id="linkSafetyCard">
+    <div class="feature-icon">⌕</div>
+    <div class="feature-copy">
+      <strong>Link Safety Check</strong>
+      <p>Inspect suspicious URLs, spot warning signs, and make a more informed choice before opening a link.</p>
+    </div>
+    <span class="arrow">→</span>
+  </a>
+
+  <a class="feature safe" href="#" id="researchHubCard">
+    <div class="feature-icon">✧</div>
+    <div class="feature-copy">
+      <strong>Reading &amp; Research Hub</strong>
+      <p>Discover useful research sources, explore reference websites, and build better browsing habits.</p>
+    </div>
+    <span class="arrow">→</span>
+  </a>
+</section>
+
+
+
+
+    <footer>
+      <span>DEEPSHIELD · BUILT AROUND CLARITY</span>
+      <span>Security signals help inform decisions; they don't guarantee authenticity.</span>
+    </footer>
+  </main>
+</div>
+
+<div class="tool-overlay" id="linkSafetyDialog" role="dialog"
+     aria-modal="true" aria-labelledby="linkSafetyTitle">
+  <div class="tool-dialog">
+    <h2 id="linkSafetyTitle">Link Safety Check</h2>
+    <p>Inspect a URL for common warning signs before visiting it.</p>
+
+    <form id="linkCheckForm">
+      <input id="linkToCheck"
+             type="text"
+             placeholder="Paste a website link"
+             autocomplete="url"
+             required
+             aria-label="Website URL">
+
+      <div class="tool-actions">
+        <button type="submit">Inspect URL</button>
+        <button type="button" class="secondary" id="closeLinkSafety">Close</button>
+      </div>
+    </form>
+
+    <div class="tool-result" id="linkCheckResult" aria-live="polite"></div>
+  </div>
+</div>
+
+<div class="tool-overlay" id="researchDialog" role="dialog"
+     aria-modal="true" aria-labelledby="researchTitle">
+  <div class="tool-dialog">
+    <h2 id="researchTitle">Reading &amp; Research Hub</h2>
+    <p>Explore reference sources and learning resources. These are external websites, not endorsements of every page they contain.</p>
+
+    <div class="resource-list">
+      <a href="https://scholar.google.com/" target="_self">
+        Google Scholar
+        <small>Search scholarly literature and research papers.</small>
+      </a>
+      <a href="https://pubmed.ncbi.nlm.nih.gov/" target="_self">
+        PubMed
+        <small>Search biomedical and life-sciences literature.</small>
+      </a>
+      <a href="https://www.wikipedia.org/" target="_self">
+        Wikipedia
+        <small>Get a general overview and follow article references.</small>
+      </a>
+      <a href="https://www.khanacademy.org/" target="_self">
+        Khan Academy
+        <small>Explore free educational lessons and practice.</small>
+      </a>
+      <a href="https://www.nature.com/" target="_self">
+        Nature
+        <small>Explore scientific research and science news.</small>
+      </a>
+    </div>
+
+    <div class="tool-actions">
+      <button type="button" class="secondary" id="closeResearch">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="sidebarPanel" class="sidebar-panel" hidden>
+  <div class="sidebar-panel-header">
+    <h2 id="sidebarPanelTitle">Bookmarks</h2>
+    <button id="sidebarPanelClose" type="button" aria-label="Close panel">✕</button>
+  </div>
+
+  <div id="sidebarPanelContent" class="sidebar-panel-content">
+    <p>Select an item from the sidebar.</p>
+  </div>
+</div>
+
+<script>
+const input = document.getElementById("query");
+
+document.getElementById("searchForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
+
+  let target;
+  if (/^https?:\/\//i.test(text)) {
+    target = text;
+  } else if (/^[\w-]+(\.[\w-]+)+(\/.*)?$/i.test(text)) {
+    target = "https://" + text;
+  } else {
+    // Temporary search provider until DeepShield's own search index exists.
+    target = "https://duckduckgo.com/?q=" + encodeURIComponent(text);
+  }
+  window.location.href = target;
+});
+
+document.getElementById("addShortcut").addEventListener("click", event => {
+  event.preventDefault();
+  const url = prompt("Enter the website address to open:");
+  if (!url) return;
+  const cleaned = url.trim();
+  if (/^https?:\/\//i.test(cleaned)) {
+    window.location.href = cleaned;
+  } else if (/^[\w-]+(\.[\w-]+)+(\/.*)?$/i.test(cleaned)) {
+    window.location.href = "https://" + cleaned;
+  } else {
+    alert("Please enter a valid website address.");
+  }
+});
+
+window.addEventListener("DOMContentLoaded", () => input.focus());
+
+const linkSafetyCard = document.getElementById("linkSafetyCard");
+const researchHubCard = document.getElementById("researchHubCard");
+
+const linkSafetyDialog = document.getElementById("linkSafetyDialog");
+const researchDialog = document.getElementById("researchDialog");
+
+function openTool(dialog) {
+  dialog.classList.add("open");
+}
+
+function closeTool(dialog) {
+  dialog.classList.remove("open");
+}
+
+linkSafetyCard.addEventListener("click", event => {
+  event.preventDefault();
+  openTool(linkSafetyDialog);
+  document.getElementById("linkToCheck").focus();
+});
+
+researchHubCard.addEventListener("click", event => {
+  event.preventDefault();
+  openTool(researchDialog);
+});
+
+document.getElementById("closeLinkSafety").addEventListener("click", () => {
+  closeTool(linkSafetyDialog);
+});
+
+document.getElementById("closeResearch").addEventListener("click", () => {
+  closeTool(researchDialog);
+});
+
+[linkSafetyDialog, researchDialog].forEach(dialog => {
+  dialog.addEventListener("click", event => {
+    if (event.target === dialog) closeTool(dialog);
+  });
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    closeTool(linkSafetyDialog);
+    closeTool(researchDialog);
+  }
+});
+
+document.getElementById("linkCheckForm").addEventListener("submit", event => {
+  event.preventDefault();
+
+  const raw = document.getElementById("linkToCheck").value.trim();
+  const result = document.getElementById("linkCheckResult");
+  const warnings = [];
+
+  let url;
+
+  try {
+    const candidate = /^[a-z][a-z0-9+.-]*:/i.test(raw)
+      ? raw
+      : "https://" + raw;
+
+    url = new URL(candidate);
+
+    if (!["http:", "https:"].includes(url.protocol)) {
+      throw new Error("Unsupported protocol");
+    }
+
+    if (!url.hostname || !url.hostname.includes(".")) {
+      throw new Error("Invalid hostname");
+    }
+  } catch {
+    result.textContent =
+      "This doesn't look like a valid HTTP or HTTPS website URL. Check the address and try again.";
+    return;
+  }
+
+  const host = url.hostname.toLowerCase();
+
+  if (url.protocol !== "https:") {
+    warnings.push("The link does not use HTTPS encryption.");
+  }
+
+  if (url.username || url.password || raw.includes("@")) {
+    warnings.push("The address contains an @ sign or embedded credentials. Check the actual destination carefully.");
+  }
+
+  if (host.startsWith("xn--") || host.split(".").some(part => part.startsWith("xn--"))) {
+    warnings.push("The domain contains internationalised characters that may resemble other letters.");
+  }
+
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
+    warnings.push("The address uses a numeric IP address instead of a familiar domain name.");
+  }
+
+  if ([
+    "bit.ly", "tinyurl.com", "t.co", "is.gd", "cutt.ly"
+  ].includes(host)) {
+    warnings.push("This is a URL-shortening service, so the final destination isn't obvious from this link alone.");
+  }
+
+  if (/(login|verify|account|password|wallet|urgent|secure-update)/i.test(
+    decodeURIComponent(url.pathname + url.search)
+  )) {
+    warnings.push("The URL contains wording often used in account or urgency-related messages. This alone does not prove malicious intent.");
+  }
+
+  result.replaceChildren();
+
+  const heading = document.createElement("strong");
+  heading.textContent = warnings.length
+    ? "Review this link carefully"
+    : "No common warning signs found";
+  result.appendChild(heading);
+
+  const domain = document.createElement("p");
+  domain.textContent = "Domain: " + host;
+  result.appendChild(domain);
+
+  const list = document.createElement("ul");
+
+  if (warnings.length) {
+    warnings.forEach(warning => {
+      const item = document.createElement("li");
+      item.textContent = warning;
+      list.appendChild(item);
+    });
+  } else {
+    const item = document.createElement("li");
+    item.textContent =
+      "This basic local check did not find the warning patterns it looks for.";
+    list.appendChild(item);
+  }
+
+  result.appendChild(list);
+
+  const note = document.createElement("p");
+  note.textContent =
+    "Limitations: this tool does not contact the website, check threat databases, or verify its reputation. A link with no warnings can still be malicious.";
+  result.appendChild(note);
+});
+
+/* ===== DeepShield Sidebar Panels ===== */
+
+(() => {
+  const panel = document.getElementById("sidebarPanel");
+  const panelTitle = document.getElementById("sidebarPanelTitle");
+  const panelContent = document.getElementById("sidebarPanelContent");
+  const closeButton = document.getElementById("sidebarPanelClose");
+
+  if (!panel || !panelTitle || !panelContent || !closeButton) {
+    console.error("DeepShield sidebar panel elements were not found.");
+    return;
+  }
+
+  let currentHistory = [];
+  let currentDownloads = [];
+
+  function openPanel(title) {
+    panelTitle.textContent = title;
+    panel.hidden = false;
+  }
+
+  function closePanel() {
+    panel.hidden = true;
+  }
+
+  function addEmptyMessage(message) {
+    const p = document.createElement("p");
+    p.className = "sidebar-panel-empty";
+    p.textContent = message;
+    panelContent.replaceChildren(p);
+  }
+
+  function renderItems(items, type) {
+    panelContent.replaceChildren();
+
+    if (!items.length) {
+      addEmptyMessage(
+        type === "history"
+          ? "No browsing history yet. Visit a website first."
+          : "No downloads recorded yet."
+      );
+      return;
+    }
+
+    items.forEach((item) => {
+      const card = document.createElement("div");
+      card.className = "sidebar-panel-item";
+
+      const heading = document.createElement("strong");
+      heading.textContent =
+        item.title || item.filename || item.url || "Untitled";
+      card.appendChild(heading);
+
+      if (item.url) {
+        const url = document.createElement("p");
+        url.textContent = item.url;
+        card.appendChild(url);
+      }
+
+      if (item.visitedAt) {
+        const date = document.createElement("p");
+        date.textContent = "Visited: " + item.visitedAt;
+        card.appendChild(date);
+      }
+
+      if (item.state) {
+        const status = document.createElement("p");
+        status.textContent = "Status: " + item.state;
+        card.appendChild(status);
+      }
+
+      if (type === "history" && item.url) {
+        const visitButton = document.createElement("button");
+        visitButton.textContent = "Open website";
+        visitButton.addEventListener("click", () => {
+          window.deepShield?.navigate(item.url);
+        });
+        card.appendChild(visitButton);
+      }
+
+      panelContent.appendChild(card);
+    });
+  }
+
+  function showHistory() {
+    openPanel("Browsing History");
+    renderItems(currentHistory, "history");
+    window.deepShield?.getSidebarData?.();
+  }
+
+  function showDownloads() {
+    openPanel("Downloads");
+    renderItems(currentDownloads, "downloads");
+    window.deepShield?.getSidebarData?.();
+  }
+
+  function showBookmarks() {
+    openPanel("Bookmarks");
+    panelContent.replaceChildren();
+
+    // Read bookmarks saved by the existing toolbar.
+    let bookmarks = [];
+
+    try {
+      bookmarks = JSON.parse(
+        localStorage.getItem("deepShieldBookmarks") || "[]"
+      );
+    } catch (error) {
+      console.error("Could not read bookmarks:", error);
+    }
+
+    if (!Array.isArray(bookmarks) || bookmarks.length === 0) {
+      addEmptyMessage(
+        "No bookmarks found. Save a website using the browser's bookmark button."
+      );
+      return;
+    }
+
+    bookmarks.forEach((bookmark) => {
+      const card = document.createElement("div");
+      card.className = "sidebar-panel-item";
+
+      const heading = document.createElement("strong");
+      heading.textContent = bookmark.title || bookmark.url || "Bookmark";
+      card.appendChild(heading);
+
+      const url = document.createElement("p");
+      url.textContent = bookmark.url || "";
+      card.appendChild(url);
+
+      if (bookmark.url) {
+        const openButton = document.createElement("button");
+        openButton.textContent = "Open";
+        openButton.addEventListener("click", () => {
+          window.deepShield?.navigate(bookmark.url);
+        });
+        card.appendChild(openButton);
+      }
+
+      panelContent.appendChild(card);
+    });
+  }
+
+  function showSettings() {
+    openPanel("Settings");
+    panelContent.replaceChildren();
+
+    const description = document.createElement("p");
+    description.className = "sidebar-panel-empty";
+    description.textContent =
+      "Choose a simple display preference for your start page.";
+    panelContent.appendChild(description);
+
+    const label = document.createElement("label");
+    label.textContent = "Text size ";
+    label.htmlFor = "sidebarTextSize";
+
+    const select = document.createElement("select");
+    select.id = "sidebarTextSize";
+    select.style.cssText =
+      "margin:10px;padding:8px;background:#293b5c;color:white;border-radius:8px;";
+
+    [
+      { value: "normal", text: "Normal" },
+      { value: "large", text: "Large" }
+    ].forEach((optionData) => {
+      const option = document.createElement("option");
+      option.value = optionData.value;
+      option.textContent = optionData.text;
+      select.appendChild(option);
+    });
+
+    const savedSize = localStorage.getItem("deepShieldTextSize") || "normal";
+    select.value = savedSize;
+
+    function applyTextSize(size) {
+      document.body.style.fontSize = size === "large" ? "18px" : "";
+      localStorage.setItem("deepShieldTextSize", size);
+    }
+
+    applyTextSize(savedSize);
+    select.addEventListener("change", () => {
+      applyTextSize(select.value);
+    });
+
+    panelContent.appendChild(label);
+    panelContent.appendChild(select);
+
+    const note = document.createElement("p");
+    note.className = "sidebar-panel-empty";
+    note.textContent =
+      "Text size applies to this start page. Other browser settings are not changed.";
+    panelContent.appendChild(note);
+  }
+
+  document.getElementById("bookmarksLink")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    showBookmarks();
+  });
+
+  document.getElementById("historyLink")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    showHistory();
+  });
+
+  document.getElementById("downloadsLink")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    showDownloads();
+  });
+
+  document.getElementById("settingsLink")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    showSettings();
+  });
+
+  closeButton.addEventListener("click", closePanel);
+
+  window.deepShield?.onSidebarHistory?.((items) => {
+    currentHistory = Array.isArray(items) ? items : [];
+    if (!panel.hidden && panelTitle.textContent === "Browsing History") {
+      renderItems(currentHistory, "history");
+    }
+  });
+
+  window.deepShield?.onSidebarDownloads?.((items) => {
+    currentDownloads = Array.isArray(items) ? items : [];
+    if (!panel.hidden && panelTitle.textContent === "Downloads") {
+      renderItems(currentDownloads, "downloads");
+    }
+  });
+
+  // Restore the user's saved text preference.
+  const savedTextSize = localStorage.getItem("deepShieldTextSize");
+  if (savedTextSize === "large") {
+    document.body.style.fontSize = "18px";
+  }
+})();
+
+</script>
+
+<!-- DeepShield Sidebar Panel -->
+
+
+<style>
+  .sidebar-panel[hidden] {
+    display: none !important;
+  }
+
+  .sidebar-panel {
+    position: fixed;
+    z-index: 9999;
+    top: 20px;
+    left: 145px;
+    width: min(420px, calc(100vw - 175px));
+    max-height: calc(100vh - 40px);
+    overflow: hidden;
+    color: #f4f4ff;
+    background: #10192c;
+    border: 1px solid #586b98;
+    border-radius: 16px;
+    box-shadow: 0 16px 45px #0009;
+  }
+
+  .sidebar-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #354563;
+  }
+
+  .sidebar-panel-header h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+
+  .sidebar-panel-header button,
+  .sidebar-panel-content button {
+    color: #fff;
+    background: #293b5c;
+    border: 1px solid #52678e;
+    border-radius: 8px;
+    padding: 9px 12px;
+    cursor: pointer;
+  }
+
+  .sidebar-panel-content {
+    padding: 14px;
+    overflow-y: auto;
+    max-height: calc(100vh - 120px);
+  }
+
+  .sidebar-panel-item {
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #354563;
+    border-radius: 10px;
+    overflow-wrap: anywhere;
+  }
+
+  .sidebar-panel-item strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #aeeaff;
+  }
+
+  .sidebar-panel-item p {
+    margin: 5px 0;
+    color: #d3dcef;
+    font-size: 13px;
+  }
+
+  .sidebar-panel-item button {
+    margin: 5px 5px 0 0;
+  }
+
+  .sidebar-panel-empty {
+    color: #c5cfe4;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 600px) {
+    .sidebar-panel {
+      left: 12px;
+      width: calc(100vw - 48px);
+    }
+  }
+</style>
+</body>
+</html>

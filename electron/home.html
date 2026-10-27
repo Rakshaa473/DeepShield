@@ -1,0 +1,603 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeepShield Browser</title>
+
+  <style>
+    :root {
+      --bg: #0a1020;
+      --panel: #10192c;
+      --active: #1c2942;
+      --border: #2b3955;
+      --text: #f4f4ff;
+      --muted: #aebbd8;
+      --violet: #b9a5ff;
+      --cyan: #75e8df;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      font: 14px "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .tabs {
+      height: 43px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 4px 12px;
+      background: #0a1020;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      margin-right: 7px;
+      color: var(--violet);
+      font-size: 17px;
+      font-weight: 850;
+      letter-spacing: -.4px;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border: 1px solid #8173ce;
+      border-radius: 9px;
+      color: var(--cyan);
+      font-size: 17px;
+    }
+
+    #tabList {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      height: 100%;
+      flex: 1;
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    #tabList::-webkit-scrollbar { display: none; }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 1 230px;
+      min-width: 100px;
+      max-width: 230px;
+      height: 33px;
+      padding: 0 10px;
+      border: 1px solid transparent;
+      border-radius: 10px 10px 4px 4px;
+      background: #111a2d;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--active);
+      border-color: var(--border);
+      color: white;
+    }
+
+    .tab-symbol {
+      flex-shrink: 0;
+      color: var(--violet);
+    }
+
+    .tab-title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 12px;
+    }
+
+    .tab-close {
+      width: 22px;
+      height: 23px;
+      flex-shrink: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 6px;
+      color: #aebbd8;
+      background: transparent;
+      font-size: 17px;
+    }
+
+    .tab-close:hover { background: #37435e; color: white; }
+
+    .new-tab, .nav-button, .tool-button {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: #b8c8e9;
+    }
+
+    .new-tab {
+      width: 32px;
+      height: 32px;
+      font-size: 23px;
+    }
+
+    .new-tab:hover, .nav-button:hover, .tool-button:hover {
+      background: #202c45;
+      color: white;
+    }
+
+    .toolbar {
+      height: 57px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      background: #0d1526;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-button, .tool-button {
+      width: 34px;
+      height: 36px;
+      font-size: 21px;
+    }
+
+    .address-wrap {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex: 1;
+      min-width: 70px;
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid #354566;
+      border-radius: 24px;
+      background: #19243a;
+    }
+
+    .address-wrap:focus-within {
+      border-color: var(--violet);
+      box-shadow: 0 0 0 1px #b9a5ff25;
+    }
+
+    .search-symbol {
+      color: #aebbd8;
+      font-size: 20px;
+    }
+
+    #address {
+      flex: 1;
+      width: 100%;
+      min-width: 0;
+      height: 36px;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      color: white;
+      background: transparent;
+      font-size: 13px;
+    }
+
+    #address::placeholder { color: #8e9bb8; }
+
+    #trust {
+      flex-shrink: 0;
+      color: var(--cyan);
+      font-size: 17px;
+    }
+
+    .separator {
+      width: 1px;
+      height: 24px;
+      margin: 0 2px;
+      background: var(--border);
+    }
+
+    #pageStatus {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+
+    @media (max-width: 760px) {
+      .brand { font-size: 14px; gap: 5px; }
+      .brand-mark { width: 23px; height: 23px; }
+      .tabs { gap: 5px; padding-inline: 7px; }
+      .tab { flex-basis: 150px; }
+      .toolbar { gap: 3px; padding-inline: 6px; }
+      .nav-button, .tool-button { width: 29px; }
+    }
+
+/* DEEPSHIELD TOOLBAR — READABILITY UPDATE */
+
+
+/* DEEPSHIELD — REFERENCE COLOURS AND FIXED TOOLBAR */
+
+:root {
+  --bg: #0a1020;
+  --panel: #10192c;
+  --active: #1c2942;
+  --border: #2b3955;
+  --text: #f4f4ff;
+  --muted: #bfcbea;
+  --violet: #b9a5ff;
+  --cyan: #75e8df;
+}
+
+/* Preserve the original 100px total toolbar height */
+.tabs {
+  height: 43px;
+  min-height: 43px;
+  flex-shrink: 0;
+  background: #0a1020;
+}
+
+.toolbar {
+  height: 57px;
+  min-height: 57px;
+  flex-shrink: 0;
+  padding: 6px 12px;
+  background: #0d1526;
+}
+
+/* Keep every control inside its row */
+.tab {
+  height: 33px;
+  min-height: 0;
+  padding: 0 12px;
+  border-radius: 10px 10px 4px 4px;
+}
+
+.tab-title {
+  font-size: 14px;
+}
+
+.tab-close {
+  width: 22px;
+  height: 23px;
+  font-size: 18px;
+}
+
+.nav-button,
+.tool-button {
+  width: 36px;
+  height: 36px;
+  min-height: 0;
+  font-size: 22px;
+}
+
+.address-wrap {
+  height: 40px;
+  min-height: 0;
+  background: #19243a;
+  border-color: #354566;
+}
+
+#address {
+  height: 36px;
+  min-height: 0;
+  font-size: 16px;
+}
+
+.address-wrap:focus-within {
+  border-color: #b9a5ff;
+  box-shadow: 0 0 0 1px rgba(185, 165, 255, 0.18);
+}
+
+button:focus-visible,
+input:focus-visible,
+.tab:focus-visible {
+  outline: 2px solid #75e8df;
+  outline-offset: 2px;
+}
+
+.new-tab:hover,
+.nav-button:hover,
+.tool-button:hover {
+  background: #202c45;
+  color: #75e8df;
+}
+
+
+body {
+  font-size: 16px;
+  color: var(--toolbar-text);
+}
+
+
+
+.tab {
+  min-height: 54px;
+  padding: 0 20px;
+  font-size: 17px;
+  border-radius: 15px 15px 5px 5px;
+}
+
+
+
+button {
+  font-size: 19px;
+}
+
+input,
+.address,
+#addressBar,
+#addressInput {
+  font-size: 19px;
+}
+
+button,
+.tab,
+input {
+  outline-offset: 3px;
+}
+
+button:focus-visible,
+.tab:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--toolbar-cyan);
+}
+
+button:hover {
+  filter: brightness(1.16);
+}
+
+input {
+  min-height: 48px;
+}
+
+@media (max-width: 900px) {
+  .tab {
+    font-size: 15px;
+    padding: 0 12px;
+  }
+
+  button,
+  input {
+    font-size: 16px;
+  }
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="tabs">
+    <div class="brand">
+      <span class="brand-mark">◇</span>
+      <span>DeepShield</span>
+    </div>
+
+    <div id="tabList" aria-label="Browser tabs"></div>
+
+    <button class="new-tab" id="newTab" title="New tab" aria-label="New tab">+</button>
+  </div>
+
+  <div class="toolbar">
+    <button class="nav-button" id="back" title="Back" aria-label="Back">←</button>
+    <button class="nav-button" id="forward" title="Forward" aria-label="Forward">→</button>
+    <button class="nav-button" id="reload" title="Reload" aria-label="Reload">↻</button>
+
+    <div class="address-wrap">
+      <span class="search-symbol">⌕</span>
+      <input
+        id="address"
+        placeholder="Search or enter a website"
+        aria-label="Search or enter a website"
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <span id="trust" title="Connection status">◇</span>
+    </div>
+
+    <button class="tool-button" id="home" title="Home" aria-label="Home">⌂</button>
+    <button class="tool-button" id="bookmark" title="Bookmark current page" aria-label="Bookmark">☆</button>
+    <button class="tool-button" id="downloads" title="Downloads" aria-label="Downloads">↓</button>
+    <button class="tool-button" id="menu" title="Browser information" aria-label="Browser menu">⋮</button>
+  </div>
+
+  <div id="pageStatus" role="status" aria-live="polite">Ready</div>
+
+  <script>
+    const browser = window.deepShield;
+    const address = document.getElementById("address");
+    const tabList = document.getElementById("tabList");
+    const trust = document.getElementById("trust");
+    const pageStatus = document.getElementById("pageStatus");
+    const bookmarkButton = document.getElementById("bookmark");
+
+    let currentUrl = "";
+    let currentTabs = [];
+
+    function isStartPage(url) {
+      return !url || url.startsWith("file://");
+    }
+
+    function navigate() {
+      const value = address.value.trim();
+      if (value) browser.navigate(value);
+    }
+
+    function renderTabs(tabs) {
+      currentTabs = Array.isArray(tabs) ? tabs : [];
+      tabList.replaceChildren();
+
+      currentTabs.forEach(tab => {
+        const item = document.createElement("div");
+        item.className = "tab" + (tab.active ? " active" : "");
+        item.title = tab.title || "New tab";
+
+        const symbol = document.createElement("span");
+        symbol.className = "tab-symbol";
+        symbol.textContent = tab.isStartPage ? "◇" : "◉";
+
+        const title = document.createElement("span");
+        title.className = "tab-title";
+        title.textContent = tab.title || "New tab";
+
+        const close = document.createElement("button");
+        close.className = "tab-close";
+        close.textContent = "×";
+        close.title = "Close tab";
+        close.setAttribute("aria-label", "Close tab");
+
+        close.addEventListener("click", event => {
+          event.stopPropagation();
+          browser.closeTab(tab.id);
+        });
+
+        item.addEventListener("click", () => {
+          browser.switchTab(tab.id);
+        });
+
+        item.append(symbol, title, close);
+        tabList.appendChild(item);
+      });
+    }
+
+    function refreshBookmark() {
+      try {
+        const saved = JSON.parse(
+          localStorage.getItem("deepShieldBookmarks") || "[]"
+        );
+        const exists = saved.some(item => item.url === currentUrl);
+        bookmarkButton.textContent = exists ? "★" : "☆";
+        bookmarkButton.style.color = exists ? "#ffe19a" : "";
+      } catch {
+        bookmarkButton.textContent = "☆";
+      }
+    }
+
+    document.getElementById("back").onclick = () => browser.back();
+    document.getElementById("forward").onclick = () => browser.forward();
+    document.getElementById("reload").onclick = () => browser.reload();
+    document.getElementById("home").onclick = () => browser.goHome();
+    document.getElementById("newTab").onclick = () => browser.newTab();
+
+    address.addEventListener("keydown", event => {
+      if (event.key === "Enter") navigate();
+      if (event.key === "Escape") address.blur();
+    });
+
+    bookmarkButton.addEventListener("click", () => {
+      if (isStartPage(currentUrl)) {
+        alert("Open a website before bookmarking it.");
+        return;
+      }
+
+      try {
+        const saved = JSON.parse(
+          localStorage.getItem("deepShieldBookmarks") || "[]"
+        );
+        const exists = saved.some(item => item.url === currentUrl);
+
+        const updated = exists
+          ? saved.filter(item => item.url !== currentUrl)
+          : [...saved, {
+              url: currentUrl,
+              title: document.title || currentUrl
+            }];
+
+        localStorage.setItem("deepShieldBookmarks", JSON.stringify(updated));
+        refreshBookmark();
+      } catch {
+        alert("Could not save this bookmark.");
+      }
+    });
+
+    document.getElementById("downloads").onclick = () => {
+      alert("The Downloads panel is not connected yet.");
+    };
+
+    document.getElementById("menu").onclick = () => {
+      alert(
+        "DeepShield Browser\n\n" +
+        "New tabs and tab switching are enabled.\n" +
+        "Downloads and browser settings are still under development."
+      );
+    };
+
+    browser.onTabsChange(renderTabs);
+
+    browser.onAddressChange(url => {
+      currentUrl = url || "";
+      address.value = isStartPage(currentUrl) ? "" : currentUrl;
+      refreshBookmark();
+    });
+
+    browser.onLoadingChange(loading => {
+      pageStatus.textContent = loading ? "Loading page…" : "Page loaded";
+    });
+
+    browser.onPageInfo(info => {
+      currentUrl = info.url || "";
+
+      trust.textContent = isStartPage(currentUrl)
+        ? "◇"
+        : (info.secure ? "🔒" : "⚠");
+
+      trust.title = isStartPage(currentUrl)
+        ? "DeepShield start page"
+        : (info.secure
+          ? "HTTPS connection; content is not automatically verified"
+          : "Connection is not HTTPS");
+
+      pageStatus.textContent = isStartPage(currentUrl)
+        ? "DeepShield start page"
+        : ((info.secure ? "HTTPS" : "Not HTTPS") + " · " + (info.title || info.url));
+
+      refreshBookmark();
+    });
+
+    document.addEventListener("keydown", event => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "l") {
+        event.preventDefault();
+        address.focus();
+        address.select();
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "r") {
+        event.preventDefault();
+        browser.reload();
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "t") {
+        event.preventDefault();
+        browser.newTab();
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "w") {
+        event.preventDefault();
+        const active = currentTabs.find(tab => tab.active);
+        if (active) browser.closeTab(active.id);
+      }
+    });
+  </script>
+</body>
+</html>
